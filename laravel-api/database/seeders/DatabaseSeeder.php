@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Asset;
+use App\Models\Portfolio;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -21,5 +23,12 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        Portfolio::query()->firstOrCreate(['name' => 'Portefeuille de démonstration']);
+
+        Asset::query()->firstOrCreate(
+            ['symbol' => 'ACME'],
+            ['name' => 'Action de démonstration'],
+        );
     }
 }
