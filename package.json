@@ -1,0 +1,38 @@
+{
+  "name": "my-wallet-finance",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Application privée de suivi de patrimoine",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "admin:create": "tsx scripts/create-admin.ts",
+    "portfolios:init": "tsx scripts/initialize-portfolios.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "^2.0.2",
+    "decimal.js": "^10.5.0",
+    "read-excel-file": "^9.3.12",
+    "next": "^16.0.0",
+    "pg": "^8.16.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.15.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.9.0",
+    "tsx": "^4.20.0",
+    "vitest": "^5.0.4"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
