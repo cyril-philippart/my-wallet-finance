@@ -20,6 +20,6 @@ export async function saveDailyWealthEvolution(userId:string,withoutPokemonChang
 
 export async function getStoredWealthHistory(userId:string):Promise<StoredWealthPoint[]>{
   await ensureTable();
-  const result=await database.query<{date:string;value:string;without_pokemon:string}>(`SELECT day::text date,value_with_pokemon_eur::text value,value_without_pokemon_eur::text without_pokemon FROM daily_wealth_history WHERE user_id=$1 ORDER BY day`,[userId]);
+  const result=await database.query<{date:string;value:string;without_pokemon:string}>(`SELECT day::text date,value_with_pokemon_eur::text value,value_without_pokemon_eur::text without_pokemon FROM daily_wealth_history WHERE user_id=$1 AND day<current_date ORDER BY day`,[userId]);
   return result.rows.map(row=>({date:row.date,value:Number(row.value),withoutPokemon:Number(row.without_pokemon)}));
 }

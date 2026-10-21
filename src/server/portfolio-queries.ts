@@ -166,8 +166,11 @@ export async function getDashboardData(userId:string):Promise<DashboardData>{
     }
     if(opening.isZero())return{...emptyPeriod(),missingAssets};const amount=closing.sub(opening).add(adjustment);return{amountEur:amount.toString(),percent:amount.div(opening).mul(100).toString(),missingAssets};
   }
-  const[snapshotDay,snapshotMonth,year]=await Promise.all([periodMetric("day"),periodMetric("month"),periodMetric("year")]);
-  const day=snapshotDay.percent===null?marketPeriodFallback(personalPositions,"day"):snapshotDay;
+  const[snapshotMonth,year]=await Promise.all([periodMetric("month"),periodMetric("year")]);
+  // La performance journalière doit toujours partir des clôtures de veille.
+  // Un snapshot pris pendant une séance (notamment avant la clôture US) n'est
+  // pas une valeur d'ouverture fiable et peut fortement gonfler le résultat.
+  const day=marketPeriodFallback(personalPositions,"day");
   const month=snapshotMonth.percent===null?marketPeriodFallback(personalPositions,"month"):snapshotMonth;
   const groupDefinitions=[
     {id:"actions" as const,name:"Actions",match:(portfolio:PortfolioSummary)=>!isMilanPortfolioName(portfolio.name)&&portfolio.category==="EQUITY"},
@@ -180,10 +183,10 @@ export async function getDashboardData(userId:string):Promise<DashboardData>{
     const invested=members.reduce((sum,portfolio)=>sum.add(portfolio.investedEur),new Decimal(0));
     const complete=members.every(portfolio=>portfolio.marketValueEur!==null);const market=complete?members.reduce((sum,portfolio)=>sum.add(portfolio.marketValueEur!),new Decimal(0)):null;
     const gain=market?.sub(invested)??null;const global=gain===null||invested.isZero()?emptyPeriod():{amountEur:gain.toString(),percent:gain.div(invested).mul(100).toString()};
-    const[snapshotGroupDay,snapshotGroupMonth,groupYear]=await Promise.all([periodMetric("day",active),periodMetric("month",active),periodMetric("year",active)]);
+    const[snapshotGroupMonth,groupYear]=await Promise.all([periodMetric("month",active),periodMetric("year",active)]);
     const memberIds=new Set(members.map(portfolio=>portfolio.id));
     const groupPositions=positions.filter(position=>memberIds.has(position.portfolioId));
-    const groupDay=snapshotGroupDay.percent===null?marketPeriodFallback(groupPositions,"day"):snapshotGroupDay;
+    const groupDay=marketPeriodFallback(groupPositions,"day");
     const groupMonth=snapshotGroupMonth.percent===null?marketPeriodFallback(groupPositions,"month"):snapshotGroupMonth;
     return{id:definition.id,name:definition.name,positionCount:members.reduce((sum,portfolio)=>sum+portfolio.positionCount,0),marketValueEur:market?.toString()??null,investedEur:invested.toString(),day:groupDay,global,month:groupMonth,year:groupYear};
   }));

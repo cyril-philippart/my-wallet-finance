@@ -33,7 +33,7 @@ function PerformanceCard({label,percent,amount,note,missingAssets=[],warningPeri
   return <article className="performanceCard"><span>{label}</span>{closed?<strong><span className="marketClosed">Closed</span></strong>:<><strong className={tone(percent)}>{pct(percent)}<PartialWarning names={missingAssets} period={warningPeriod}/></strong><small className={tone(amount)}>{amount===null?(note??"Historique insuffisant"):eur(amount)}</small></>}</article>;
 }
 function ComparisonPerformanceCard({label,withPercent,withAmount,withoutPercent,withoutAmount,missingAssets=[]}:{label:string;withPercent:string|null;withAmount:string|null;withoutPercent:string|null;withoutAmount:string|null;missingAssets?:string[]|undefined}){
-  return <article className="performanceCard comparisonPerformanceCard"><span>{label}</span><div className="comparisonMetrics"><div className="comparisonMetric withPokemon"><small><i/>Avec Pokémon</small><strong className={tone(withPercent)}>{pct(withPercent)}<PartialWarning names={missingAssets} period="de veille"/></strong><em className={tone(withAmount)}>{withAmount===null?"Historique insuffisant":eur(withAmount)}</em></div><div className="comparisonMetric withoutPokemon"><small><i/>Sans Pokémon</small><strong className={tone(withoutPercent)}>{pct(withoutPercent)}<PartialWarning names={missingAssets} period="de veille"/></strong><em className={tone(withoutAmount)}>{withoutAmount===null?"Historique insuffisant":eur(withoutAmount)}</em></div></div></article>;
+  return <article className="performanceCard comparisonPerformanceCard"><span>{label}</span><div className="comparisonMetrics"><div className="comparisonMetric withPokemon"><small>Avec Pokémon</small><strong className={tone(withPercent)}>{pct(withPercent)}<PartialWarning names={missingAssets} period="de veille"/></strong><em className={tone(withAmount)}>{withAmount===null?"Historique insuffisant":eur(withAmount)}</em></div><div className="comparisonMetric withoutPokemon"><small>Sans Pokémon</small><strong className={tone(withoutPercent)}>{pct(withoutPercent)}<PartialWarning names={missingAssets} period="de veille"/></strong><em className={tone(withoutAmount)}>{withoutAmount===null?"Historique insuffisant":eur(withoutAmount)}</em></div></div></article>;
 }
 function GroupMetric({label,percent,amount,missingAssets=[],warningPeriod="de veille",closed=false}:{label:string;percent:string|null;amount:string|null;missingAssets?:string[]|undefined;warningPeriod?:string|undefined;closed?:boolean|undefined}){
   return <div className="groupMetric"><span>{label}</span>{closed?<b><span className="marketClosed">Closed</span></b>:<><b className={tone(percent)}>{pct(percent)}<PartialWarning names={missingAssets} period={warningPeriod}/></b><small className={tone(amount)}>{amount===null?"—":eur(amount)}</small></>}</div>;
@@ -74,13 +74,6 @@ export default function Dashboard(props:DashboardData&{priceSyncConfigured:boole
         <PerformanceCard label="Performance de l’année · hors Pokémon" percent={periodPerformance.year.percent} amount={periodPerformance.year.amountEur}/>
       </section>
 
-      <PortfolioHistoryChart liveHistory={wealthHistory} events={wealthEvents}/>
-
-      <section id="markets">
-        <div className="sectionHeading"><div><p className="eyebrow">Points de repère</p><h2>Marchés</h2></div><small className="sectionHint">Les variations apparaîtront après constitution de l’historique.</small></div>
-        <div className="benchmarkPanel"><div className="benchmarkHead"><span>Indice</span><span>Jour</span><span>Mois</span><span>Année</span><span>Cours</span></div>{benchmarks.map(item=><div className="benchmarkRow" key={item.id}><div><b>{item.name}</b></div><DailyMarketChange ticker={item.ticker} percent={item.dayPct} amount={item.dayAmount} currency={item.currency}/>{marketChange(item.monthPct,item.monthAmount,item.currency)}{marketChange(item.yearPct,item.yearAmount,item.currency)}<span>{item.price===null?"—":`${num(item.price)} ${currencySymbol(item.currency)}`}</span></div>)}</div>
-      </section>
-
       <section id="portfolios">
         <div className="sectionHeading"><div><p className="eyebrow">Répartition des performances</p><h2>Mes catégories d’investissement</h2></div></div>
         <div className="groupBoard">
@@ -90,6 +83,13 @@ export default function Dashboard(props:DashboardData&{priceSyncConfigured:boole
           <div className="groupDivider"><span>Portefeuille dédié</span></div>
           {portfolioGroups.filter(group=>group.id==="milan").map(group=><article className={`groupRow group-${group.id}`} key={group.id}><div className="groupIdentity"><span className="groupMonogram">{group.name.slice(0,1)}</span><div><h3>{group.name}</h3><p>{group.positionCount} position{group.positionCount>1?"s":""} · <b>{eur(group.marketValueEur)}</b></p></div></div><GroupMetric label="Jour" percent={group.day.percent} amount={group.day.amountEur} missingAssets={group.day.missingAssets} closed={groupClosed(group.id)}/><GroupMetric label="Global" percent={group.global.percent} amount={group.global.amountEur}/><GroupMetric label="Mois" percent={group.month.percent} amount={group.month.amountEur} missingAssets={group.month.missingAssets} warningPeriod="de fin de mois"/><GroupMetric label="Année" percent={group.year.percent} amount={group.year.amountEur}/></article>)}
         </div>
+      </section>
+
+      <PortfolioHistoryChart liveHistory={wealthHistory} events={wealthEvents}/>
+
+      <section id="markets">
+        <div className="sectionHeading"><div><p className="eyebrow">Points de repère</p><h2>Marchés</h2></div><small className="sectionHint">Les variations apparaîtront après constitution de l’historique.</small></div>
+        <div className="benchmarkPanel"><div className="benchmarkHead"><span>Indice</span><span>Jour</span><span>Mois</span><span>Année</span><span>Cours</span></div>{benchmarks.map(item=><div className="benchmarkRow" key={item.id}><div><b>{item.name}</b></div><DailyMarketChange ticker={item.ticker} percent={item.dayPct} amount={item.dayAmount} currency={item.currency}/>{marketChange(item.monthPct,item.monthAmount,item.currency)}{marketChange(item.yearPct,item.yearAmount,item.currency)}<span>{item.price===null?"—":`${num(item.price)} ${currencySymbol(item.currency)}`}</span></div>)}</div>
       </section>
 
     </section>
