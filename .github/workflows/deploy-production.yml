@@ -29,6 +29,10 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+        env:
+          # Next charge les routes serveur pendant la compilation. Aucune
+          # connexion n'est effectuée, mais le module DB exige une URL valide.
+          DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
 
   publish:
     needs: test
