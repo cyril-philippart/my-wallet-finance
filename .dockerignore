@@ -1,0 +1,13 @@
+.git
+.github
+.next
+node_modules
+dist
+coverage
+*.log
+.env
+.env.*
+!.env.example
+laravel-api
+deploy
+
