@@ -13,6 +13,7 @@ const DividendIcon=()=> <svg className="navSvg" viewBox="0 0 24 24" aria-hidden=
 const MilanIcon=()=> <svg className="navSvg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.8 19.5c.5-3.4 2.7-5.3 6.2-5.3s5.7 1.9 6.2 5.3"/></svg>;
 const HistoryIcon=()=> <svg className="navSvg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7.5V3.8M4.5 7.5h3.7M4.8 7.2A8.5 8.5 0 1 1 3.7 14"/><path d="M12 7.5V12l3 1.8"/></svg>;
 const PokemonIcon=()=> <svg className="navSvg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M9.2 12a2.8 2.8 0 1 0 5.6 0 2.8 2.8 0 0 0-5.6 0Z"/></svg>;
+const ResaleIcon=()=> <svg className="navSvg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h14l-1 12H6z"/><path d="M8.5 8V6a3.5 3.5 0 0 1 7 0v2M8.5 13h7M13.5 10.8 15.7 13l-2.2 2.2"/></svg>;
 
 export function Sidebar({active="dashboard",portfolios=[]}:{active?:string;portfolios?:PortfolioSummary[]}){
   return <aside className="sidebar">
@@ -25,7 +26,9 @@ export function Sidebar({active="dashboard",portfolios=[]}:{active?:string;portf
         <div className="portfolioSubmenu">{groups.map(([slug,label])=><a className={`portfolioLink portfolioLink-${slug} ${active===slug?"active":""}`} href={`/portefeuilles/${slug}`} key={slug}>{label}</a>)}</div>
       </div>
       <a className={`navItem dividendNav ${active==="dividendes"?"active":""}`} href="/dividendes"><DividendIcon/>Dividendes</a>
-      <a className={`navItem pokemonNav ${active==="pokemon"?"active":""}`} href="/pokemon"><PokemonIcon/>Pokémon</a>
+      <div className="navSeparator"/>
+      <a className={`navItem pokemonNav ${active==="pokemon"?"active":""}`} href="/pokemon"><PokemonIcon/>Collection Pokémon</a>
+      <a className={`navItem resaleNav ${active==="revente-pokemon"?"active":""}`} href="/revente-pokemon"><ResaleIcon/>Resale Pokémon</a>
       <div className="navSeparator"/>
       <a className={`navItem milanNav ${active==="milan"?"active":""}`} href="/milan"><MilanIcon/>Milàn</a>
       <a className={`navItem historyNav ${active==="historique"?"active":""}`} href="/historique"><HistoryIcon/>Historique</a>
