@@ -19,7 +19,7 @@ ENV NODE_ENV=production \
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/bootstrap-production.mjs ./scripts/bootstrap-production.mjs
 USER nextjs
 EXPOSE 3000
 CMD ["node", "server.js"]
-

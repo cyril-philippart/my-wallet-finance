@@ -36,6 +36,21 @@ services:
     networks:
       - backend
 
+  bootstrap:
+    image: ${APP_IMAGE}:${IMAGE_TAG:-latest}
+    profiles: ["tools"]
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    command: ["node", "scripts/bootstrap-production.mjs"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+
   app:
     image: ${APP_IMAGE}:${IMAGE_TAG:-latest}
     restart: unless-stopped
@@ -86,4 +101,3 @@ networks:
   backend:
     internal: true
   frontend:
-

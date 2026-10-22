@@ -97,6 +97,7 @@ jobs:
           docker compose --env-file .env.production -f compose.production.yml pull app db caddy
           docker compose --env-file .env.production -f compose.production.yml up -d db
           docker compose --env-file .env.production -f compose.production.yml run --rm migrate
+          docker compose --env-file .env.production -f compose.production.yml run --rm bootstrap
           docker compose --env-file .env.production -f compose.production.yml up -d --remove-orphans
           docker image prune -f
           REMOTE
