@@ -92,7 +92,7 @@ jobs:
           ssh -i ~/.ssh/production "$PROD_USER@$PROD_HOST" "IMAGE_TAG='$IMAGE_TAG' bash -s" <<'REMOTE'
           set -euo pipefail
           app_dir=/opt/apps/my-wallet-finance
-          sudo install -d -o "$USER" -g "$USER" "$app_dir"
+          install -d "$app_dir"
           tar -xzf /tmp/my-wallet-deploy.tgz -C "$app_dir"
           rm -f /tmp/my-wallet-deploy.tgz
           cd "$app_dir/deploy"
