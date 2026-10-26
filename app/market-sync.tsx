@@ -1,14 +1,26 @@
 "use client";
 import {useActionState,useEffect,useState} from "react";
+import {useRouter} from "next/navigation";
 import {syncPricesAction,type SyncPricesState} from "./sync-actions";
 
 const idleState:SyncPricesState={status:"idle"};
+const DASHBOARD_REFRESH_INTERVAL=5*60*1000;
 
 export function MarketSync({configured,initialState=idleState}:{configured:boolean;initialState?:SyncPricesState}){
+  const router=useRouter();
   const[state,action,pending]=useActionState(syncPricesAction,initialState);
   const[displayState,setDisplayState]=useState<SyncPricesState>(initialState);
 
   useEffect(()=>{if(state.status!=="idle")setDisplayState(state);},[state]);
+  useEffect(()=>{setDisplayState(initialState);},[initialState]);
+  useEffect(()=>{
+    if(!configured)return;
+    const refresh=()=>router.refresh();
+    const timer=window.setInterval(refresh,DASHBOARD_REFRESH_INTERVAL);
+    const onVisibility=()=>{if(document.visibilityState==="visible")refresh();};
+    document.addEventListener("visibilitychange",onVisibility);
+    return()=>{window.clearInterval(timer);document.removeEventListener("visibilitychange",onVisibility);};
+  },[configured,router]);
 
   if(!configured)return <div className="marketSync warning"><span className="statusDot"/><div><b>Cours de marché</b><small>Google Sheets reste à configurer</small></div></div>;
   const lastUpdate=displayState.status==="success"&&displayState.updatedAt

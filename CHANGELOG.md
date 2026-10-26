@@ -8,6 +8,7 @@ Toutes les évolutions notables de My Wallet Finance sont documentées ici.
 - Affichage de la dernière synchronisation réellement enregistrée par le serveur.
 - Alignement de l'historique quotidien sur la performance globale réellement calculée, sans cumul approximatif des performances journalières.
 - Ajout d'un point provisoire pour la journée en cours dans la courbe du dashboard.
+- Rafraîchissement automatique du dashboard toutes les 5 minutes et au retour sur l'onglet, sans déclencher un nouvel appel Google Sheets.
 
 ### Modifié
 
