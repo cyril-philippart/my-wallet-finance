@@ -11,6 +11,7 @@ import type { PokemonSummary } from "../../src/server/zebradex-provider";
 import {PortfolioHistoryChart} from "./portfolio-history-chart";
 import type {StoredWealthPoint} from "../../src/server/wealth-history";
 import type {WealthEvent} from "../../src/server/wealth-events";
+import type {SyncPricesState} from "../sync-actions";
 
 const eur=(value:string|null)=>value===null?"—":new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR"}).format(Number(value));
 const num=(value:string|null,digits=2)=>value===null?"—":new Intl.NumberFormat("fr-FR",{maximumFractionDigits:digits}).format(Number(value));
@@ -39,8 +40,8 @@ function GroupMetric({label,percent,amount,missingAssets=[],warningPeriod="de ve
   return <div className="groupMetric"><span>{label}</span>{closed?<b><span className="marketClosed">Closed</span></b>:<><b className={tone(percent)}>{pct(percent)}<PartialWarning names={missingAssets} period={warningPeriod}/></b><small className={tone(amount)}>{amount===null?"—":eur(amount)}</small></>}</div>;
 }
 
-export default function Dashboard(props:DashboardData&{priceSyncConfigured:boolean;pokemon:PokemonSummary|null;wealthHistory:StoredWealthPoint[];wealthEvents:WealthEvent[]}){
-  const{portfolios,positions,benchmarks,portfolioGroups,totalInvestedEur,totalMarketValueEur,totalGainEur,globalPerformancePct,availableCapitalEur,dividendsEur,periodPerformance,priceSyncConfigured,pokemon,wealthHistory,wealthEvents}=props;
+export default function Dashboard(props:DashboardData&{priceSyncConfigured:boolean;latestMarketSync:SyncPricesState;pokemon:PokemonSummary|null;wealthHistory:StoredWealthPoint[];wealthEvents:WealthEvent[]}){
+  const{portfolios,positions,benchmarks,portfolioGroups,totalInvestedEur,totalMarketValueEur,totalGainEur,globalPerformancePct,availableCapitalEur,dividendsEur,periodPerformance,priceSyncConfigured,latestMarketSync,pokemon,wealthHistory,wealthEvents}=props;
   const[now,setNow]=useState(()=>new Date());
   useEffect(()=>{const timer=window.setInterval(()=>setNow(new Date()),60_000);return()=>window.clearInterval(timer);},[]);
   const quotedPositions=positions.filter(position=>position.googleTicker);
@@ -53,12 +54,14 @@ export default function Dashboard(props:DashboardData&{priceSyncConfigured:boole
   const combinedDayAmount=periodPerformance.day.amountEur===null?null:String(Number(periodPerformance.day.amountEur)+Number(pokemon?.dayAmountEur??0));
   const combinedDayOpening=combinedDayAmount===null||combinedMarket===null?null:Number(combinedMarket)-Number(combinedDayAmount);
   const combinedDayPct=combinedDayOpening===null||combinedDayOpening===0?null:String(Number(combinedDayAmount)/combinedDayOpening*100);
+  const parisDate=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Paris",year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
+  const currentHistoryPoint=totalGainEur===null||combinedGain===null?null:{date:parisDate,withoutPokemon:Number(totalGainEur),value:Number(combinedGain)};
   return <main className="shell">
     <Sidebar portfolios={portfolios}/>
 
     <section className="content" id="overview">
       <header className="topbar"><button className="mobileBrand" aria-label="Menu">W</button><div><p className="eyebrow">Tableau de bord</p><h1>Bonjour Cyril.</h1></div><TransactionForm portfolios={portfolios} weeklyBtcReminder/></header>
-      <MarketSync configured={priceSyncConfigured}/>
+      <MarketSync configured={priceSyncConfigured} initialState={latestMarketSync}/>
 
       <section className="wealthGrid">
         <article className="wealthMain"><p className="eyebrow">Patrimoine placé</p><strong>{eur(combinedMarket)}</strong><span>{totalMarketValueEur===null?"Certains cours sont manquants":"Placements financiers et collection Pokémon"}</span></article>
@@ -85,7 +88,7 @@ export default function Dashboard(props:DashboardData&{priceSyncConfigured:boole
         </div>
       </section>
 
-      <PortfolioHistoryChart liveHistory={wealthHistory} events={wealthEvents}/>
+      <PortfolioHistoryChart liveHistory={wealthHistory} currentPoint={currentHistoryPoint} events={wealthEvents}/>
 
       <section id="markets">
         <div className="sectionHeading"><div><p className="eyebrow">Points de repère</p><h2>Marchés</h2></div><small className="sectionHint">Les variations apparaîtront après constitution de l’historique.</small></div>

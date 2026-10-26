@@ -1,47 +1,14 @@
 "use client";
-import {startTransition,useActionState,useEffect,useRef,useState} from "react";
-import {isMarketOpen} from "../src/domain/market-hours";
+import {useActionState,useEffect,useState} from "react";
 import {syncPricesAction,type SyncPricesState} from "./sync-actions";
 
-const initialState:SyncPricesState={status:"idle"};
-const AUTO_SYNC_INTERVAL=15*60*1000;
-const MARKET_CHECK_INTERVAL=60*1000;
+const idleState:SyncPricesState={status:"idle"};
 
-export function MarketSync({configured}:{configured:boolean}){
+export function MarketSync({configured,initialState=idleState}:{configured:boolean;initialState?:SyncPricesState}){
   const[state,action,pending]=useActionState(syncPricesAction,initialState);
   const[displayState,setDisplayState]=useState<SyncPricesState>(initialState);
-  const running=useRef(false);
-  const lastSyncAt=useRef(0);
 
-  useEffect(()=>{
-    const saved=window.localStorage.getItem("market-last-sync");
-    if(saved)try{const parsed=JSON.parse(saved) as SyncPricesState;setDisplayState(parsed);lastSyncAt.current=parsed.syncedAt?Date.parse(parsed.syncedAt):0;}catch{}
-  },[]);
-
-  useEffect(()=>{
-    if(state.status==="idle")return;
-    setDisplayState(state);
-    if(state.status==="success"){lastSyncAt.current=state.syncedAt?Date.parse(state.syncedAt):Date.now();window.localStorage.setItem("market-last-sync",JSON.stringify(state));}
-  },[state]);
-
-  useEffect(()=>{
-    if(!configured)return;
-    const synchronizeIfNeeded=()=>{
-      const now=new Date();
-      const exchangeOpen=isMarketOpen("INDEXEURO:PX1",now)||isMarketOpen("INDEXNASDAQ:.IXIC",now);
-      const stale=Date.now()-lastSyncAt.current>=AUTO_SYNC_INTERVAL;
-      if(!exchangeOpen||!stale||document.visibilityState!=="visible"||running.current)return;
-      running.current=true;
-      const data=new FormData();data.set("source","automatic");
-      startTransition(()=>{action(data);});
-      window.setTimeout(()=>{running.current=false;},60_000);
-    };
-    const initialTimer=window.setTimeout(synchronizeIfNeeded,500);
-    const timer=window.setInterval(synchronizeIfNeeded,MARKET_CHECK_INTERVAL);
-    const onVisibility=()=>{if(document.visibilityState==="visible")synchronizeIfNeeded();};
-    document.addEventListener("visibilitychange",onVisibility);
-    return()=>{window.clearTimeout(initialTimer);window.clearInterval(timer);document.removeEventListener("visibilitychange",onVisibility);};
-  },[action,configured]);
+  useEffect(()=>{if(state.status!=="idle")setDisplayState(state);},[state]);
 
   if(!configured)return <div className="marketSync warning"><span className="statusDot"/><div><b>Cours de marché</b><small>Google Sheets reste à configurer</small></div></div>;
   const lastUpdate=displayState.status==="success"&&displayState.updatedAt

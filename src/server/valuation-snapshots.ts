@@ -27,11 +27,11 @@ export async function captureDailyValuations(userId:string):Promise<number>{
       [portfolio.id,closing.toString(),externalFlow.toString(),income.toString(),index.toString(),status,JSON.stringify(reasons)]);
     captured++;
   }
-  if(dashboard.periodPerformance.day.amountEur!==null){
+  if(dashboard.totalGainEur!==null){
     const pokemon=await getPokemonSummary();
-    const withoutPokemonChange=new Decimal(dashboard.periodPerformance.day.amountEur);
-    const withPokemonChange=withoutPokemonChange.add(pokemon?.dayAmountEur??0);
-    await saveDailyWealthEvolution(userId,withoutPokemonChange.toString(),withPokemonChange.toString());
+    const withoutPokemonValue=new Decimal(dashboard.totalGainEur);
+    const withPokemonValue=withoutPokemonValue.add(pokemon?.gainEur??0);
+    await saveDailyWealthEvolution(userId,withoutPokemonValue.toString(),withPokemonValue.toString());
   }
   return captured;
 }

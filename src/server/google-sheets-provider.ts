@@ -12,6 +12,21 @@ const responseSchema=z.object({ok:z.literal(true),generatedAt:z.iso.datetime(),q
 
 type Reference={price:number;observedAt:string;fxToEur:number|null};
 export interface QuoteRegistration{ticker:string;name:string}
+export type SyncTriggerSource="manual"|"automatic";
+export interface LatestMarketSync{status:"success";updatedAt:string;syncedAt:string;source:SyncTriggerSource}
+
+export async function getLatestMarketSync():Promise<LatestMarketSync|null>{
+  const schema=await database.query<{present:boolean}>(
+    `SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='sync_runs' AND column_name='trigger_source') AS present`,
+  );
+  const result=schema.rows[0]?.present
+    ?await database.query<{ended_at:Date;trigger_source:SyncTriggerSource}>(`SELECT ended_at,trigger_source FROM sync_runs WHERE status IN ('SUCCESS','PARTIAL') AND ended_at IS NOT NULL ORDER BY ended_at DESC LIMIT 1`)
+    :await database.query<{ended_at:Date;trigger_source:SyncTriggerSource}>(`SELECT ended_at,'automatic'::text AS trigger_source FROM sync_runs WHERE status IN ('SUCCESS','PARTIAL') AND ended_at IS NOT NULL ORDER BY ended_at DESC LIMIT 1`);
+  const row=result.rows[0];
+  if(!row)return null;
+  const endedAt=new Date(row.ended_at);
+  return{status:"success",updatedAt:endedAt.toLocaleString("fr-FR",{timeZone:"Europe/Paris",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}),syncedAt:endedAt.toISOString(),source:row.trigger_source};
+}
 
 export async function registerGoogleSheetsAssets(assets:QuoteRegistration[]):Promise<number>{
   const endpoint=process.env.GOOGLE_SHEETS_QUOTES_URL,secret=process.env.GOOGLE_SHEETS_SYNC_SECRET;
@@ -42,11 +57,15 @@ async function insertFxRate(currency:string,rate:number,observedAt:string):Promi
   );
 }
 
-export async function synchronizeGoogleSheetsPrices():Promise<{imported:number;ignored:number}>{
+export async function synchronizeGoogleSheetsPrices(source:SyncTriggerSource="automatic"):Promise<{imported:number;ignored:number;skipped?:boolean}>{
   const endpoint=process.env.GOOGLE_SHEETS_QUOTES_URL,secret=process.env.GOOGLE_SHEETS_SYNC_SECRET;
   if(!endpoint||!secret)throw new Error("GOOGLE_SHEETS_NOT_CONFIGURED");
+  const lockClient=await database.connect();
+  const lockKey="my_wallet_market_sync";
+  const lock=await lockClient.query<{locked:boolean}>(`SELECT pg_try_advisory_lock(hashtext($1)) AS locked`,[lockKey]);
+  if(!lock.rows[0]?.locked){lockClient.release();return{imported:0,ignored:0,skipped:true};}
   const url=new URL(endpoint);url.searchParams.set("key",secret);
-  const run=await database.query<{id:string}>(`INSERT INTO sync_runs(provider,status) VALUES('GOOGLE_SHEETS','RUNNING') RETURNING id`);const runId=run.rows[0]!.id;
+  const run=await database.query<{id:string}>(`INSERT INTO sync_runs(provider,status,trigger_source) VALUES('GOOGLE_SHEETS','RUNNING',$1) RETURNING id`,[source]);const runId=run.rows[0]!.id;
   try{
     let response=await fetch(url,{cache:"no-store",signal:AbortSignal.timeout(60_000)});
     if(!response.ok&&(response.status===404||response.status>=500))response=await fetch(url,{cache:"no-store",signal:AbortSignal.timeout(60_000)});
@@ -79,4 +98,5 @@ export async function synchronizeGoogleSheetsPrices():Promise<{imported:number;i
     await database.query(`UPDATE sync_runs SET status=$1,ended_at=now(),imported_count=$2 WHERE id=$3`,[ignored?"PARTIAL":"SUCCESS",imported,runId]);
     return{imported,ignored};
   }catch(error){await database.query(`UPDATE sync_runs SET status='FAILED',ended_at=now(),error_message=$1 WHERE id=$2`,[error instanceof Error?error.message:"UNKNOWN",runId]);throw error;}
+  finally{await lockClient.query(`SELECT pg_advisory_unlock(hashtext($1))`,[lockKey]);lockClient.release();}
 }

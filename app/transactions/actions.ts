@@ -43,7 +43,7 @@ export async function createTransactionAction(_state:TransactionState, formData:
       await client.query("COMMIT");
       const assets=batch.data.filter(row=>row.kind!=="DIVIDEND"&&row.type!=="FUND_EURO"&&row.type!=="SCPI").map(row=>({ticker:normalizeTicker(row.type==="BTC"?"BTCEUR":row.type==="ETH"?"ETHEUR":row.googleTicker),name:row.assetName}));
       let quotePending=false;
-      if(assets.length){try{await registerGoogleSheetsAssets(assets);await synchronizeGoogleSheetsPrices();}catch{quotePending=true;}}
+      if(assets.length){try{await registerGoogleSheetsAssets(assets);await synchronizeGoogleSheetsPrices("manual");}catch{quotePending=true;}}
       const quoteMessage=assets.length?(quotePending?" Cours en attente de synchronisation.":" Cotations synchronisées."):"";
       revalidatePath("/");revalidatePath("/dividendes");return{ok:true,message:`${batch.data.length} opération${batch.data.length>1?"s":""} enregistrée${batch.data.length>1?"s":""}.${quoteMessage}`};
     }catch(error){await client.query("ROLLBACK");return{message:error instanceof Error?error.message:"L’enregistrement groupé a échoué."};}finally{client.release();}

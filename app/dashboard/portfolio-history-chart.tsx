@@ -13,9 +13,9 @@ const fullDate=(value:string)=>new Intl.DateTimeFormat("fr-FR",{day:"numeric",mo
 const initialEventState:EventState={status:"idle"};
 const eventLabels={MARKET:"Marché",NEWS:"Actualité",POKEMON:"Pokémon",NOTE:"Note personnelle"};
 
-export function PortfolioHistoryChart({liveHistory,events}:{liveHistory:StoredWealthPoint[];events:WealthEvent[]}){
+export function PortfolioHistoryChart({liveHistory,currentPoint,events}:{liveHistory:StoredWealthPoint[];currentPoint:StoredWealthPoint|null;events:WealthEvent[]}){
   const router=useRouter();
-  const history=[...new Map([...portfolioHistory,...liveHistory].map(point=>[point.date,point])).values()].sort((left,right)=>left.date.localeCompare(right.date));
+  const history=[...new Map([...portfolioHistory,...liveHistory,...(currentPoint?[currentPoint]:[])].map(point=>[point.date,point])).values()].sort((left,right)=>left.date.localeCompare(right.date));
   const[active,setActive]=useState(history.length-1);
   const[modalOpen,setModalOpen]=useState(false);
   const[editingEvent,setEditingEvent]=useState<WealthEvent|null>(null);
