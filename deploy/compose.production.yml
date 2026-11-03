@@ -116,3 +116,4 @@ networks:
   backend:
     internal: true
   frontend:
+    name: deploy_frontend
