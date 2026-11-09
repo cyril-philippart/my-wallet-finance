@@ -26,7 +26,7 @@ const purchaseSchema = z.object({
 const editPurchaseSchema = purchaseSchema.extend({ id: z.string().uuid() });
 const saleSchema = z.object({
   soldOn: z.iso.date(),
-  description: z.string().trim().min(1).max(180),
+  description: z.string().trim().min(1).max(1000),
   saleChannel: z.enum(["VINTED", "PHYSICAL"]),
   saleTotal: numberFromInput(),
   items: z

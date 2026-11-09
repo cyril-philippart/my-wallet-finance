@@ -3301,6 +3301,18 @@ td:last-child small {
   font-size: 12px;
   font-weight: 600;
 }
+.saleExternalLink {
+  color: var(--text);
+  font-style: italic;
+  font-weight: 600;
+  text-decoration: none;
+}
+.saleExternalLink:hover {
+  color: var(--portfolio-color);
+}
+.salesHistoryTable .saleExternalLink {
+  font-style: italic !important;
+}
 .saleItemTable {
   overflow: hidden;
   border: 1px solid var(--line);

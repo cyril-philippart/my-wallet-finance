@@ -36,6 +36,7 @@ const shortDate = (value: string) =>
     month: "2-digit",
     year: "2-digit",
   }).format(new Date(`${value}T12:00:00`));
+const isWebLink = (value: string) => /^https?:\/\//i.test(value.trim());
 type SaleItem = {
   id: string;
   seriesName: string;
@@ -263,7 +264,7 @@ export function ResaleManager({ data }: { data: PokemonTradingData }) {
                   <tr>
                     <th>Date</th>
                     <th>Canal</th>
-                    <th>Description vente</th>
+                    <th>Détail vente</th>
                     <th>Composition</th>
                     <th>Coût d’achat</th>
                     <th>Prix de vente</th>
@@ -283,7 +284,18 @@ export function ResaleManager({ data }: { data: PokemonTradingData }) {
                         </span>
                       </td>
                       <td>
-                        <b>{sale.description}</b>
+                        {isWebLink(sale.description) ? (
+                          <a
+                            className="saleExternalLink"
+                            href={sale.description}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                          >
+                            Link
+                          </a>
+                        ) : (
+                          <b>{sale.description}</b>
+                        )}
                       </td>
                       <td>
                         <ul className="saleComposition">
@@ -839,12 +851,12 @@ export function ResaleManager({ data }: { data: PokemonTradingData }) {
                     />
                   </label>
                   <label>
-                    Description de la vente
+                    Description ou lien Vinted
                     <input
                       name="description"
                       required
-                      maxLength={180}
-                      placeholder="Ex. Lot anniversaire Pokémon"
+                      maxLength={1000}
+                      placeholder="https://www.vinted.fr/items/..."
                     />
                   </label>
                   <label>
@@ -1150,11 +1162,11 @@ export function ResaleManager({ data }: { data: PokemonTradingData }) {
                   />
                 </label>
                 <label>
-                  Description de la vente
+                  Description ou lien Vinted
                   <input
                     name="description"
                     required
-                    maxLength={180}
+                    maxLength={1000}
                     defaultValue={editingSale.description}
                   />
                 </label>
