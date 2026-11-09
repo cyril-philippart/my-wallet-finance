@@ -1,28 +1,1382 @@
 "use client";
-import {Fragment,useActionState,useEffect,useState,useTransition} from "react";
-import {useRouter} from "next/navigation";
-import {SortableTable} from "../sortable-table";
-import {ProductAutocomplete} from "./product-autocomplete";
-import type {PokemonSale,PokemonStockLot,PokemonTradingData} from "../../src/server/pokemon-resale-queries";
-import {addPokemonPurchaseAction,addPokemonSaleAction,deletePokemonPurchaseAction as deletePokemonPurchaseServerAction,deletePokemonSaleAction,updatePokemonPurchaseAction,updatePokemonSaleAction} from "./actions";
-const eur=(value:string)=>new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR"}).format(Number(value));
-const num=(value:string)=>new Intl.NumberFormat("fr-FR",{maximumFractionDigits:6}).format(Number(value));
-const shortDate=(value:string)=>new Intl.DateTimeFormat("fr-FR",{day:"2-digit",month:"2-digit",year:"2-digit"}).format(new Date(`${value}T12:00:00`));
-type SaleItem={id:string;seriesName:string;productName:string;quantity:string};type PurchaseItem={id:string;purchasedOn:string;seriesName:string;productName:string;quantity:string;unitCost:string};type EditingPurchase=PokemonStockLot&{productName:string};
-const newSaleItem=():SaleItem=>({id:crypto.randomUUID(),seriesName:"",productName:"",quantity:"1"});
-export function ResaleManager({data}:{data:PokemonTradingData}){
- const router=useRouter();const deletePokemonPurchaseAction=async(id:string)=>{const result=await deletePokemonPurchaseServerAction(id);if(result.ok)router.refresh();return result};
- const[purchaseToDelete,setPurchaseToDelete]=useState<{id:string;name:string}|null>(null);const[deleteError,setDeleteError]=useState<string|null>(null);const[deletingPurchase,setDeletingPurchase]=useState(false);const confirmPurchaseDeletion=async()=>{if(!purchaseToDelete||deletingPurchase)return;setDeletingPurchase(true);setDeleteError(null);try{const result=await deletePokemonPurchaseAction(purchaseToDelete.id);if(result.ok){setPurchaseToDelete(null)}else setDeleteError(result.message??"La suppression a échoué.")}catch{setDeleteError("La suppression a échoué. Réessaie.")}finally{setDeletingPurchase(false)}};
- const today=new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Paris"});const newPurchase=():PurchaseItem=>({id:crypto.randomUUID(),purchasedOn:today,seriesName:"",productName:"",quantity:"1",unitCost:""});const knownProductNames=[...new Set(data.purchases.map(item=>item.productName.trim()).filter(Boolean))].sort((left,right)=>left.localeCompare(right,"fr",{sensitivity:"base"}));const knownSeries=[...new Set(data.purchases.map(item=>item.seriesName.trim()).filter(name=>name&&name!=="Non classée"))].sort((left,right)=>left.localeCompare(right,"fr",{sensitivity:"base"}));
- const[modal,setModal]=useState<"purchase"|"sale"|null>(null);const[editing,setEditing]=useState<EditingPurchase|null>(null);const[editingSale,setEditingSale]=useState<(PokemonSale&{editItems:SaleItem[]})|null>(null);const[purchaseState,purchaseAction,purchasePending]=useActionState(addPokemonPurchaseAction,{});const[saleState,saleAction,salePending]=useActionState(addPokemonSaleAction,{});const[editState,editAction,editPending]=useActionState(updatePokemonPurchaseAction,{});const[editSaleState,editSaleAction,editSalePending]=useActionState(updatePokemonSaleAction,{});const[purchases,setPurchases]=useState<PurchaseItem[]>(()=>[newPurchase()]);const[items,setItems]=useState<SaleItem[]>(()=>[newSaleItem()]);const[openSelect,setOpenSelect]=useState<string|null>(null);const[expandedProducts,setExpandedProducts]=useState<Set<string>>(()=>new Set());const[deleting,startDelete]=useTransition();const pending=purchasePending||salePending||editPending||editSalePending||deleting;
- useEffect(()=>{if(purchaseState.ok||saleState.ok){setModal(null);setPurchases([newPurchase()]);setItems([newSaleItem()])}},[purchaseState,saleState]);useEffect(()=>{if(editState.ok)setEditing(null)},[editState]);useEffect(()=>{if(editSaleState.ok)setEditingSale(null)},[editSaleState]);
- const updatePurchase=(id:string,key:keyof Omit<PurchaseItem,"id">,value:string)=>setPurchases(rows=>rows.map(row=>row.id===id?{...row,[key]:value}:row));const duplicatePurchase=(id:string)=>setPurchases(rows=>{const index=rows.findIndex(row=>row.id===id);if(index<0)return rows;const copy={...rows[index]!,id:crypto.randomUUID()};return[...rows.slice(0,index+1),copy,...rows.slice(index+1)]});const updateItem=(id:string,key:"seriesName"|"productName"|"quantity",value:string)=>setItems(rows=>rows.map(row=>row.id===id?{...row,[key]:value}:row));
- return <><div className="resaleToolbar"><div><b>Gestion du stock</b><p>{data.products.length} produit{data.products.length>1?"s":""} disponible{data.products.length>1?"s":""}</p></div><span><button className="secondary" onClick={()=>{setPurchases([newPurchase()]);setModal("purchase")}}>+ Ajouter un achat</button><button className="primary" disabled={data.products.length===0} onClick={()=>{setItems([newSaleItem()]);setModal("sale")}}>+ Enregistrer une vente</button></span></div>
- <div className="resaleTablesGrid"><details className="tradingSection resaleDataAccordion" open><summary><div><p className="eyebrow">Historique</p><h2>Ventes</h2></div><i aria-hidden="true"/></summary>{data.sales.length===0?<div className="emptyState"><strong>Aucune vente enregistrée</strong><span>Les ventes à l’unité et les lots apparaîtront ici.</span></div>:<SortableTable className="resaleTable salesHistoryTable sortableStockTable"><table><thead><tr><th>Date</th><th>Description vente</th><th>Composition</th><th>Coût d’achat</th><th>Prix de vente</th><th>Bénéfice / perte</th><th/></tr></thead><tbody>{data.sales.map(sale=><tr key={sale.id}><td>{shortDate(sale.soldOn)}</td><td><b>{sale.description}</b></td><td><ul className="saleComposition">{sale.items.map(item=><li key={`${item.seriesName}-${item.productName}`}>{num(item.quantity)} × {item.productName} <small>· {item.seriesName}</small></li>)}</ul></td><td>{eur(sale.costTotalEur)}</td><td>{eur(sale.saleTotalEur)}</td><td className={Number(sale.profitEur)>0?"positive":Number(sale.profitEur)<0?"negative":""}><b>{eur(sale.profitEur)}</b></td><td><span className="saleRowActions"><button type="button" className="editSaleButton" title="Modifier la vente" aria-label="Modifier la vente" onClick={()=>setEditingSale({...sale,editItems:sale.items.map(item=>({id:crypto.randomUUID(),seriesName:item.seriesName,productName:item.productName,quantity:item.quantity}))})}>Modifier</button><button className="deleteOperationButton" disabled={deleting} title="Supprimer la vente" aria-label="Supprimer la vente" onClick={()=>{if(confirm(`Supprimer la vente « ${sale.description} » ? Le stock sera restauré.`))startDelete(()=>deletePokemonSaleAction(sale.id))}}>×</button></span></td></tr>)}</tbody></table></SortableTable>}</details>
- <details className="tradingSection resaleDataAccordion" open><summary><div><p className="eyebrow">Achats</p><h2>Achat</h2></div><i aria-hidden="true"/></summary>{data.purchases.length===0?<div className="emptyState"><strong>Aucun achat enregistré</strong><span>Ajoute tes produits Pokémon pour constituer ton stock.</span></div>:<SortableTable className="resaleTable stockTable sortableStockTable"><table><thead><tr><th>Date d’achat</th><th>Série</th><th>Produit</th><th>Quantité achetée</th><th>Coût unitaire moyen</th><th>Total acheté</th><th>Actions</th></tr></thead><tbody>{data.purchases.map(row=>{const expanded=expandedProducts.has(row.id);return <Fragment key={row.id}><tr className="stockSummaryRow"><td>{shortDate(row.purchasedOn)}</td><td><b>{row.seriesName}</b></td><td>{row.lots.length>1?<button type="button" className={`stockAccordionTrigger${expanded?" open":""}`} onClick={()=>setExpandedProducts(current=>{const next=new Set(current);if(next.has(row.id))next.delete(row.id);else next.add(row.id);return next})}><i aria-hidden="true"/><span><b>{row.productName}</b><small>{row.lots.length} achats</small></span></button>:<span className="singlePurchaseProduct"><b>{row.productName}</b><small>1 achat</small></span>}</td><td>{num(row.quantity)}</td><td>{eur(row.unitCostEur)}</td><td><b>{eur(String(Number(row.quantity)*Number(row.unitCostEur)))}</b></td><td>{row.lots.length===1&&<span className="stockLotActions singlePurchaseActions"><button type="button" title="Modifier cet achat" aria-label="Modifier cet achat" onClick={()=>setEditing({...row.lots[0]!,productName:row.productName})}>Modifier</button><button type="button" className="danger" title="Supprimer cet achat" aria-label="Supprimer cet achat" disabled={deletingPurchase} onClick={()=>{setDeleteError(null);setPurchaseToDelete({id:row.lots[0]!.id,name:row.productName})}}>Supprimer</button></span>}</td></tr>{expanded&&row.lots.length>1&&<tr className="stockLotsRow"><td colSpan={7}><div className="stockLots"><header><span>Date</span><span>Quantité</span><span>Prix unitaire</span><span>Total acheté</span><span>Actions</span></header>{row.lots.map(lot=><article key={lot.id}><span>{shortDate(lot.purchasedOn)}</span><span>{num(lot.quantity)}</span><span>{eur(lot.unitCostEur)}</span><span>{eur(String(Number(lot.quantity)*Number(lot.unitCostEur)))}</span><span className="stockLotActions"><button type="button" title="Modifier cet achat" aria-label="Modifier cet achat" onClick={()=>setEditing({...lot,productName:row.productName})}>Modifier</button><button type="button" className="danger" title="Supprimer cet achat" aria-label="Supprimer cet achat" disabled={deletingPurchase} onClick={()=>{setDeleteError(null);setPurchaseToDelete({id:lot.id,name:row.productName})}}>Supprimer</button></span></article>)}</div></td></tr>}</Fragment>})}</tbody></table></SortableTable>}</details></div>
- {modal&&<div className={`modalBackdrop${pending?" interactionLocked":""}`} onMouseDown={event=>{if(event.target===event.currentTarget&&!pending)setModal(null)}}><section className="modal batchModal resaleModal" role="dialog" aria-modal="true"><header className="modalHeader"><div><p className="eyebrow">Achat-revente Pokémon</p><h2>{modal==="purchase"?(purchases.length===1?"Ajouter un achat":`Ajouter ${purchases.length} achats`):"Enregistrer une vente"}</h2></div><button disabled={pending} onClick={()=>setModal(null)}>×</button></header>{modal==="purchase"?<form action={purchaseAction} className="transactionForm resaleForm"><input type="hidden" name="purchases" value={JSON.stringify(purchases.map(({purchasedOn,seriesName,productName,quantity,unitCost})=>({purchasedOn,seriesName,productName,quantity,unitCost})))}/><div className="operationTable purchaseOperationTable"><div className="operationTableHead"><span>Date d’achat</span><span>Série</span><span>Produit</span><span>Quantité achetée</span><span>Prix d’achat unitaire</span><span/></div><div className="operationList">{purchases.map(row=><article className="operationLine" key={row.id}><label><input type="date" required value={row.purchasedOn} onChange={event=>updatePurchase(row.id,"purchasedOn",event.target.value)}/></label><label><ProductAutocomplete value={row.seriesName} products={knownSeries} onChange={value=>updatePurchase(row.id,"seriesName",value)} placeholder="Ex. ME6 - Règne Delta" suggestionsLabel="Séries déjà enregistrées" createLabel="Créer cette nouvelle série" maxLength={120}/></label><label><ProductAutocomplete value={row.productName} products={knownProductNames} onChange={value=>updatePurchase(row.id,"productName",value)} placeholder={knownProductNames.length?"Rechercher ou saisir un produit":"Ex. Pokébox 30 ans"}/></label><label><input required inputMode="decimal" value={row.quantity} onChange={event=>updatePurchase(row.id,"quantity",event.target.value)}/></label><label><input required inputMode="decimal" value={row.unitCost} onChange={event=>updatePurchase(row.id,"unitCost",event.target.value)} placeholder="0,00"/></label><span className="lineActions"><button type="button" className="duplicateOperation" onClick={()=>duplicatePurchase(row.id)} aria-label="Dupliquer cet achat" title="Dupliquer">⧉</button><button type="button" className="removeOperation" disabled={purchases.length===1} onClick={()=>setPurchases(rows=>rows.filter(item=>item.id!==row.id))}>×</button></span></article>)}</div></div><button type="button" className="addOperation" onClick={()=>setPurchases(rows=>[...rows,newPurchase()])}>+ Ajouter un produit</button>{purchaseState.message&&<p className="formError">{purchaseState.message}</p>}<footer><div/><span><button type="button" disabled={pending} onClick={()=>setModal(null)}>Annuler</button><button className="primaryButton" disabled={pending}>{pending?"Enregistrement…":purchases.length===1?"Enregistrer":"Tout enregistrer"}</button></span></footer></form>:<form action={saleAction} className="transactionForm resaleForm"><input type="hidden" name="items" value={JSON.stringify(items.map(({seriesName,productName,quantity})=>({seriesName,productName,quantity})))}/><div className="saleMeta"><label>Date de vente<input type="date" name="soldOn" required defaultValue={today}/></label><label>Description de la vente<input name="description" required maxLength={180} placeholder="Ex. Lot anniversaire Pokémon"/></label><label>Prix de vente total<input name="saleTotal" required inputMode="decimal" placeholder="0,00"/></label></div><div className="saleItemTable"><div className="saleItemHead"><span>Produit pris dans le stock</span><span>Quantité vendue</span><span/></div>{items.map(row=><article key={row.id}><div className={`productPicker${openSelect===row.id?" open":""}`}><button type="button" className="productPickerTrigger" onClick={()=>setOpenSelect(current=>current===row.id?null:row.id)}><span>{row.productName?`${row.productName} · ${row.seriesName}`:"Sélectionner"}</span><i aria-hidden="true"/></button>{openSelect===row.id&&<div className="productPickerMenu">{data.products.map(product=><button type="button" key={`${product.seriesName}-${product.productName}`} onClick={()=>{updateItem(row.id,"seriesName",product.seriesName);updateItem(row.id,"productName",product.productName);setOpenSelect(null)}}><b>{product.productName}</b><em>{product.seriesName}</em><small>{num(product.remainingQuantity)} disponible{Number(product.remainingQuantity)>1?"s":""}</small></button>)}</div>}</div><input required inputMode="decimal" value={row.quantity} onChange={event=>updateItem(row.id,"quantity",event.target.value)}/><button type="button" className="removeOperation" disabled={items.length===1} onClick={()=>setItems(rows=>rows.filter(item=>item.id!==row.id))}>×</button></article>)}</div><button type="button" className="addOperation" onClick={()=>setItems(rows=>[...rows,newSaleItem()])}>+ Ajouter un produit au lot</button>{saleState.message&&<p className="formError">{saleState.message}</p>}<footer><div/><span><button type="button" disabled={pending} onClick={()=>setModal(null)}>Annuler</button><button className="primaryButton" disabled={pending||items.some(item=>!item.productName)}>{pending?"Enregistrement…":"Enregistrer la vente"}</button></span></footer></form>}</section></div>}
- {editing&&<div className={`modalBackdrop${pending?" interactionLocked":""}`} onMouseDown={event=>{if(event.target===event.currentTarget&&!pending)setEditing(null)}}><section className="modal resaleEditModal" role="dialog" aria-modal="true"><header className="modalHeader"><div><p className="eyebrow">Achat-revente Pokémon</p><h2>Modifier un achat</h2></div><button disabled={pending} onClick={()=>setEditing(null)}>×</button></header><form action={editAction} className="transactionForm resaleForm"><input type="hidden" name="id" value={editing.id}/><div className="resaleEditGrid"><label>Date d’achat<input type="date" name="purchasedOn" required defaultValue={editing.purchasedOn}/></label><label>Série<ProductAutocomplete name="seriesName" value={editing.seriesName} products={knownSeries} onChange={value=>setEditing(current=>current?{...current,seriesName:value}:current)} placeholder="Rechercher ou saisir une série" suggestionsLabel="Séries déjà enregistrées" createLabel="Créer cette nouvelle série" maxLength={120}/></label><label>Produit<ProductAutocomplete name="productName" value={editing.productName} products={knownProductNames} onChange={value=>setEditing(current=>current?{...current,productName:value}:current)} placeholder="Rechercher ou saisir un produit" suggestionsLabel="Produits déjà enregistrés" createLabel="Créer ce nouveau produit"/></label><label>Quantité achetée<input name="quantity" required inputMode="decimal" defaultValue={editing.quantity.replace(".",",")}/></label><label>Prix unitaire<input name="unitCost" required inputMode="decimal" defaultValue={editing.unitCostEur.replace(".",",")}/></label></div>{Number(editing.soldQuantity)>0&&<p className="editStockNotice">Déjà vendue : {num(editing.soldQuantity)}. La nouvelle quantité ne peut pas être inférieure.</p>}{editState.message&&<p className="formError">{editState.message}</p>}<footer><div/><span><button type="button" disabled={pending} onClick={()=>setEditing(null)}>Annuler</button><button className="primaryButton" disabled={pending}>{pending?"Modification…":"Enregistrer"}</button></span></footer></form></section></div>}
- {editingSale&&<div className={`modalBackdrop${editSalePending?" interactionLocked":""}`} onMouseDown={event=>{if(event.target===event.currentTarget&&!editSalePending)setEditingSale(null)}}><section className="modal batchModal resaleModal" role="dialog" aria-modal="true"><header className="modalHeader"><div><p className="eyebrow">Achat-revente Pokémon</p><h2>Modifier la vente</h2></div><button disabled={editSalePending} onClick={()=>setEditingSale(null)}>×</button></header><form action={editSaleAction} className="transactionForm resaleForm"><input type="hidden" name="id" value={editingSale.id}/><input type="hidden" name="items" value={JSON.stringify(editingSale.editItems.map(({seriesName,productName,quantity})=>({seriesName,productName,quantity})))}/><div className="saleMeta"><label>Date de vente<input type="date" name="soldOn" required defaultValue={editingSale.soldOn}/></label><label>Description de la vente<input name="description" required maxLength={180} defaultValue={editingSale.description}/></label><label>Prix de vente total<input name="saleTotal" required inputMode="decimal" defaultValue={editingSale.saleTotalEur.replace(".",",")}/></label></div><div className="saleItemTable"><div className="saleItemHead"><span>Produit pris dans le stock</span><span>Quantité vendue</span><span/></div>{editingSale.editItems.map(row=><article key={row.id}><div className={`productPicker${openSelect===row.id?" open":""}`}><button type="button" className="productPickerTrigger" onClick={()=>setOpenSelect(current=>current===row.id?null:row.id)}><span>{row.productName?`${row.productName} · ${row.seriesName}`:"Sélectionner"}</span><i aria-hidden="true"/></button>{openSelect===row.id&&<div className="productPickerMenu">{data.products.map(product=><button type="button" key={`${product.seriesName}-${product.productName}`} onClick={()=>{setEditingSale(current=>current?{...current,editItems:current.editItems.map(item=>item.id===row.id?{...item,seriesName:product.seriesName,productName:product.productName}:item)}:current);setOpenSelect(null)}}><b>{product.productName}</b><em>{product.seriesName}</em></button>)}</div>}</div><input required inputMode="decimal" value={row.quantity} onChange={event=>setEditingSale(current=>current?{...current,editItems:current.editItems.map(item=>item.id===row.id?{...item,quantity:event.target.value}:item)}:current)}/><button type="button" className="removeOperation" disabled={editingSale.editItems.length===1} onClick={()=>setEditingSale(current=>current?{...current,editItems:current.editItems.filter(item=>item.id!==row.id)}:current)}>×</button></article>)}</div><button type="button" className="addOperation" onClick={()=>setEditingSale(current=>current?{...current,editItems:[...current.editItems,newSaleItem()]}:current)}>+ Ajouter un produit au lot</button>{editSaleState.message&&<p className="formError">{editSaleState.message}</p>}<footer><div/><span><button type="button" disabled={editSalePending} onClick={()=>setEditingSale(null)}>Annuler</button><button className="primaryButton" disabled={editSalePending||editingSale.editItems.some(item=>!item.productName)}>{editSalePending?"Modification…":"Enregistrer"}</button></span></footer></form></section></div>}
- {purchaseToDelete&&<div className={`modalBackdrop${deletingPurchase?" interactionLocked":""}`} onMouseDown={event=>{if(event.target===event.currentTarget&&!deletingPurchase)setPurchaseToDelete(null)}}><section className="modal deletePurchaseModal" role="alertdialog" aria-modal="true"><header className="modalHeader"><div><p className="eyebrow">Confirmation</p><h2>Supprimer cet achat ?</h2></div><button disabled={deletingPurchase} onClick={()=>setPurchaseToDelete(null)}>×</button></header><p>L’achat de <strong>{purchaseToDelete.name}</strong> sera définitivement supprimé du stock.</p>{deleteError&&<p className="formError">{deleteError}</p>}<footer><button type="button" disabled={deletingPurchase} onClick={()=>setPurchaseToDelete(null)}>Annuler</button><button type="button" className="dangerButton" disabled={deletingPurchase} onClick={confirmPurchaseDeletion}>{deletingPurchase?"Suppression…":"Supprimer"}</button></footer></section></div>}
- </>;
+import {
+  Fragment,
+  useActionState,
+  useEffect,
+  useState,
+  useTransition,
+} from "react";
+import { useRouter } from "next/navigation";
+import { SortableTable } from "../sortable-table";
+import { ProductAutocomplete } from "./product-autocomplete";
+import type {
+  PokemonSale,
+  PokemonStockLot,
+  PokemonTradingData,
+} from "../../src/server/pokemon-resale-queries";
+import {
+  addPokemonPurchaseAction,
+  addPokemonSaleAction,
+  deletePokemonPurchaseAction as deletePokemonPurchaseServerAction,
+  deletePokemonSaleAction,
+  updatePokemonPurchaseAction,
+  updatePokemonSaleAction,
+} from "./actions";
+const eur = (value: string) =>
+  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(
+    Number(value),
+  );
+const num = (value: string) =>
+  new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 6 }).format(
+    Number(value),
+  );
+const shortDate = (value: string) =>
+  new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  }).format(new Date(`${value}T12:00:00`));
+type SaleItem = {
+  id: string;
+  seriesName: string;
+  productName: string;
+  quantity: string;
+};
+type PurchaseItem = {
+  id: string;
+  purchasedOn: string;
+  seriesName: string;
+  productName: string;
+  quantity: string;
+  unitCost: string;
+};
+type EditingPurchase = PokemonStockLot & { productName: string };
+const newSaleItem = (): SaleItem => ({
+  id: crypto.randomUUID(),
+  seriesName: "",
+  productName: "",
+  quantity: "1",
+});
+export function ResaleManager({ data }: { data: PokemonTradingData }) {
+  const router = useRouter();
+  const deletePokemonPurchaseAction = async (id: string) => {
+    const result = await deletePokemonPurchaseServerAction(id);
+    if (result.ok) router.refresh();
+    return result;
+  };
+  const [purchaseToDelete, setPurchaseToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletingPurchase, setDeletingPurchase] = useState(false);
+  const confirmPurchaseDeletion = async () => {
+    if (!purchaseToDelete || deletingPurchase) return;
+    setDeletingPurchase(true);
+    setDeleteError(null);
+    try {
+      const result = await deletePokemonPurchaseAction(purchaseToDelete.id);
+      if (result.ok) {
+        setPurchaseToDelete(null);
+      } else setDeleteError(result.message ?? "La suppression a échoué.");
+    } catch {
+      setDeleteError("La suppression a échoué. Réessaie.");
+    } finally {
+      setDeletingPurchase(false);
+    }
+  };
+  const today = new Date().toLocaleDateString("en-CA", {
+    timeZone: "Europe/Paris",
+  });
+  const newPurchase = (): PurchaseItem => ({
+    id: crypto.randomUUID(),
+    purchasedOn: today,
+    seriesName: "",
+    productName: "",
+    quantity: "1",
+    unitCost: "",
+  });
+  const knownProductNames = [
+    ...new Set(
+      data.purchases.map((item) => item.productName.trim()).filter(Boolean),
+    ),
+  ].sort((left, right) =>
+    left.localeCompare(right, "fr", { sensitivity: "base" }),
+  );
+  const knownSeries = [
+    ...new Set(
+      data.purchases
+        .map((item) => item.seriesName.trim())
+        .filter((name) => name && name !== "Non classée"),
+    ),
+  ].sort((left, right) =>
+    left.localeCompare(right, "fr", { sensitivity: "base" }),
+  );
+  const [modal, setModal] = useState<"purchase" | "sale" | null>(null);
+  const [editing, setEditing] = useState<EditingPurchase | null>(null);
+  const [editingSale, setEditingSale] = useState<
+    (PokemonSale & { editItems: SaleItem[] }) | null
+  >(null);
+  const [purchaseState, purchaseAction, purchasePending] = useActionState(
+    addPokemonPurchaseAction,
+    {},
+  );
+  const [saleState, saleAction, salePending] = useActionState(
+    addPokemonSaleAction,
+    {},
+  );
+  const [editState, editAction, editPending] = useActionState(
+    updatePokemonPurchaseAction,
+    {},
+  );
+  const [editSaleState, editSaleAction, editSalePending] = useActionState(
+    updatePokemonSaleAction,
+    {},
+  );
+  const [purchases, setPurchases] = useState<PurchaseItem[]>(() => [
+    newPurchase(),
+  ]);
+  const [items, setItems] = useState<SaleItem[]>(() => [newSaleItem()]);
+  const [openSelect, setOpenSelect] = useState<string | null>(null);
+  const [salesPage, setSalesPage] = useState(1);
+  const [purchasesPage, setPurchasesPage] = useState(1);
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [deleting, startDelete] = useTransition();
+  const pending =
+    purchasePending ||
+    salePending ||
+    editPending ||
+    editSalePending ||
+    deleting;
+  const purchaseCount = data.purchases.reduce(
+    (total, row) => total + row.lots.length,
+    0,
+  );
+  const purchasedQuantity = data.purchases.reduce(
+    (total, row) => total + Number(row.quantity),
+    0,
+  );
+  const salesCostTotal = data.sales.reduce(
+    (total, sale) => total + Number(sale.costTotalEur),
+    0,
+  );
+  const pageSize = 10;
+  const salesPageCount = Math.max(1, Math.ceil(data.sales.length / pageSize));
+  const purchasesPageCount = Math.max(
+    1,
+    Math.ceil(data.purchases.length / pageSize),
+  );
+  const currentSalesPage = Math.min(salesPage, salesPageCount);
+  const currentPurchasesPage = Math.min(purchasesPage, purchasesPageCount);
+  const visibleSales = data.sales.slice(
+    (currentSalesPage - 1) * pageSize,
+    currentSalesPage * pageSize,
+  );
+  const visiblePurchases = data.purchases.slice(
+    (currentPurchasesPage - 1) * pageSize,
+    currentPurchasesPage * pageSize,
+  );
+  useEffect(() => {
+    if (purchaseState.ok || saleState.ok) {
+      setModal(null);
+      setPurchases([newPurchase()]);
+      setItems([newSaleItem()]);
+    }
+  }, [purchaseState, saleState]);
+  useEffect(() => {
+    if (editState.ok) setEditing(null);
+  }, [editState]);
+  useEffect(() => {
+    if (editSaleState.ok) setEditingSale(null);
+  }, [editSaleState]);
+  const updatePurchase = (
+    id: string,
+    key: keyof Omit<PurchaseItem, "id">,
+    value: string,
+  ) =>
+    setPurchases((rows) =>
+      rows.map((row) => (row.id === id ? { ...row, [key]: value } : row)),
+    );
+  const duplicatePurchase = (id: string) =>
+    setPurchases((rows) => {
+      const index = rows.findIndex((row) => row.id === id);
+      if (index < 0) return rows;
+      const copy = { ...rows[index]!, id: crypto.randomUUID() };
+      return [...rows.slice(0, index + 1), copy, ...rows.slice(index + 1)];
+    });
+  const updateItem = (
+    id: string,
+    key: "seriesName" | "productName" | "quantity",
+    value: string,
+  ) =>
+    setItems((rows) =>
+      rows.map((row) => (row.id === id ? { ...row, [key]: value } : row)),
+    );
+  return (
+    <>
+      <div className="resaleToolbar">
+        <span>
+          <button
+            className="secondary"
+            onClick={() => {
+              setPurchases([newPurchase()]);
+              setModal("purchase");
+            }}
+          >
+            + Ajouter un achat
+          </button>
+          <button
+            className="primary"
+            disabled={data.products.length === 0}
+            onClick={() => {
+              setItems([newSaleItem()]);
+              setModal("sale");
+            }}
+          >
+            + Enregistrer une vente
+          </button>
+        </span>
+      </div>
+      <div className="resaleTablesGrid">
+        <details className="tradingSection resaleDataAccordion" open>
+          <summary>
+            <div>
+              <p className="eyebrow">Historique</p>
+              <h2>
+                Ventes <span className="sectionCount">{data.sales.length}</span>
+              </h2>
+            </div>
+            <i aria-hidden="true" />
+          </summary>
+          {data.sales.length === 0 ? (
+            <div className="emptyState">
+              <strong>Aucune vente enregistrée</strong>
+              <span>Les ventes à l’unité et les lots apparaîtront ici.</span>
+            </div>
+          ) : (
+            <>
+              <SortableTable className="resaleTable salesHistoryTable sortableStockTable">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Canal</th>
+                    <th>Description vente</th>
+                    <th>Composition</th>
+                    <th>Coût d’achat</th>
+                    <th>Prix de vente</th>
+                    <th>Bénéfice / perte</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleSales.map((sale) => (
+                    <tr key={sale.id}>
+                      <td>{shortDate(sale.soldOn)}</td>
+                      <td>
+                        <span
+                          className={`saleChannel saleChannel-${sale.saleChannel.toLowerCase()}`}
+                        >
+                          {sale.saleChannel === "VINTED" ? "Vinted" : "Physique"}
+                        </span>
+                      </td>
+                      <td>
+                        <b>{sale.description}</b>
+                      </td>
+                      <td>
+                        <ul className="saleComposition">
+                          {sale.items.map((item) => (
+                            <li key={`${item.seriesName}-${item.productName}`}>
+                              {num(item.quantity)} × {item.productName}{" "}
+                              <small>· {item.seriesName}</small>
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                      <td>{eur(sale.costTotalEur)}</td>
+                      <td>{eur(sale.saleTotalEur)}</td>
+                      <td
+                        className={
+                          Number(sale.profitEur) > 0
+                            ? "positive"
+                            : Number(sale.profitEur) < 0
+                              ? "negative"
+                              : ""
+                        }
+                      >
+                        <b>{eur(sale.profitEur)}</b>
+                      </td>
+                      <td>
+                        <span className="saleRowActions">
+                          <button
+                            type="button"
+                            className="editSaleButton"
+                            title="Modifier la vente"
+                            aria-label="Modifier la vente"
+                            onClick={() =>
+                              setEditingSale({
+                                ...sale,
+                                editItems: sale.items.map((item) => ({
+                                  id: crypto.randomUUID(),
+                                  seriesName: item.seriesName,
+                                  productName: item.productName,
+                                  quantity: item.quantity,
+                                })),
+                              })
+                            }
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            className="deleteOperationButton"
+                            disabled={deleting}
+                            title="Supprimer la vente"
+                            aria-label="Supprimer la vente"
+                            onClick={() => {
+                              if (
+                                confirm(
+                                  `Supprimer la vente « ${sale.description} » ? Le stock sera restauré.`,
+                                )
+                              )
+                                startDelete(() =>
+                                  deletePokemonSaleAction(sale.id),
+                                );
+                            }}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td>Total</td>
+                    <td />
+                    <td />
+                    <td />
+                    <td>{eur(String(salesCostTotal))}</td>
+                    <td>{eur(data.revenueEur)}</td>
+                    <td
+                      className={
+                        Number(data.profitEur) > 0
+                          ? "positive"
+                          : Number(data.profitEur) < 0
+                            ? "negative"
+                            : ""
+                      }
+                    >
+                      {eur(data.profitEur)}
+                    </td>
+                    <td />
+                  </tr>
+                </tfoot>
+              </table>
+              </SortableTable>
+              {salesPageCount > 1 && (
+                <nav className="tablePagination" aria-label="Pagination des ventes">
+                  <button
+                    type="button"
+                    disabled={currentSalesPage === 1}
+                    onClick={() => setSalesPage(currentSalesPage - 1)}
+                  >
+                    Précédent
+                  </button>
+                  <span>
+                    Page {currentSalesPage} sur {salesPageCount}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={currentSalesPage === salesPageCount}
+                    onClick={() => setSalesPage(currentSalesPage + 1)}
+                  >
+                    Suivant
+                  </button>
+                </nav>
+              )}
+            </>
+          )}
+        </details>
+        <details className="tradingSection resaleDataAccordion" open>
+          <summary>
+            <div>
+              <p className="eyebrow">Achats</p>
+              <h2>
+                Achat <span className="sectionCount">{purchaseCount}</span>
+              </h2>
+            </div>
+            <i aria-hidden="true" />
+          </summary>
+          {data.purchases.length === 0 ? (
+            <div className="emptyState">
+              <strong>Aucun achat enregistré</strong>
+              <span>
+                Ajoute tes produits Pokémon pour constituer ton stock.
+              </span>
+            </div>
+          ) : (
+            <>
+              <SortableTable className="resaleTable stockTable sortableStockTable">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date d’achat</th>
+                    <th>Série</th>
+                    <th>Produit</th>
+                    <th>Quantité achetée</th>
+                    <th>Coût unitaire moyen</th>
+                    <th>Total acheté</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visiblePurchases.map((row) => {
+                    const expanded = expandedProducts.has(row.id);
+                    return (
+                      <Fragment key={row.id}>
+                        <tr className="stockSummaryRow">
+                          <td>{shortDate(row.purchasedOn)}</td>
+                          <td>
+                            <b>{row.seriesName}</b>
+                          </td>
+                          <td>
+                            {row.lots.length > 1 ? (
+                              <button
+                                type="button"
+                                className={`stockAccordionTrigger${expanded ? " open" : ""}`}
+                                onClick={() =>
+                                  setExpandedProducts((current) => {
+                                    const next = new Set(current);
+                                    if (next.has(row.id)) next.delete(row.id);
+                                    else next.add(row.id);
+                                    return next;
+                                  })
+                                }
+                              >
+                                <i aria-hidden="true" />
+                                <span>
+                                  <b>{row.productName}</b>
+                                  <small>{row.lots.length} achats</small>
+                                </span>
+                              </button>
+                            ) : (
+                              <span className="singlePurchaseProduct">
+                                <b>{row.productName}</b>
+                                <small>1 achat</small>
+                              </span>
+                            )}
+                          </td>
+                          <td>{num(row.quantity)}</td>
+                          <td>{eur(row.unitCostEur)}</td>
+                          <td>
+                            <b>
+                              {eur(
+                                String(
+                                  Number(row.quantity) *
+                                    Number(row.unitCostEur),
+                                ),
+                              )}
+                            </b>
+                          </td>
+                          <td>
+                            {row.lots.length === 1 && (
+                              <span className="stockLotActions singlePurchaseActions">
+                                <button
+                                  type="button"
+                                  title="Modifier cet achat"
+                                  aria-label="Modifier cet achat"
+                                  onClick={() =>
+                                    setEditing({
+                                      ...row.lots[0]!,
+                                      productName: row.productName,
+                                    })
+                                  }
+                                >
+                                  Modifier
+                                </button>
+                                <button
+                                  type="button"
+                                  className="danger"
+                                  title="Supprimer cet achat"
+                                  aria-label="Supprimer cet achat"
+                                  disabled={deletingPurchase}
+                                  onClick={() => {
+                                    setDeleteError(null);
+                                    setPurchaseToDelete({
+                                      id: row.lots[0]!.id,
+                                      name: row.productName,
+                                    });
+                                  }}
+                                >
+                                  Supprimer
+                                </button>
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                        {expanded && row.lots.length > 1 && (
+                          <tr className="stockLotsRow">
+                            <td colSpan={7}>
+                              <div className="stockLots">
+                                <header>
+                                  <span>Date</span>
+                                  <span>Quantité</span>
+                                  <span>Prix unitaire</span>
+                                  <span>Total acheté</span>
+                                  <span>Actions</span>
+                                </header>
+                                {row.lots.map((lot) => (
+                                  <article key={lot.id}>
+                                    <span>{shortDate(lot.purchasedOn)}</span>
+                                    <span>{num(lot.quantity)}</span>
+                                    <span>{eur(lot.unitCostEur)}</span>
+                                    <span>
+                                      {eur(
+                                        String(
+                                          Number(lot.quantity) *
+                                            Number(lot.unitCostEur),
+                                        ),
+                                      )}
+                                    </span>
+                                    <span className="stockLotActions">
+                                      <button
+                                        type="button"
+                                        title="Modifier cet achat"
+                                        aria-label="Modifier cet achat"
+                                        onClick={() =>
+                                          setEditing({
+                                            ...lot,
+                                            productName: row.productName,
+                                          })
+                                        }
+                                      >
+                                        Modifier
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="danger"
+                                        title="Supprimer cet achat"
+                                        aria-label="Supprimer cet achat"
+                                        disabled={deletingPurchase}
+                                        onClick={() => {
+                                          setDeleteError(null);
+                                          setPurchaseToDelete({
+                                            id: lot.id,
+                                            name: row.productName,
+                                          });
+                                        }}
+                                      >
+                                        Supprimer
+                                      </button>
+                                    </span>
+                                  </article>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td>Total</td>
+                    <td />
+                    <td />
+                    <td>{num(String(purchasedQuantity))}</td>
+                    <td>—</td>
+                    <td>{eur(data.purchasedTotalEur)}</td>
+                    <td />
+                  </tr>
+                </tfoot>
+              </table>
+              </SortableTable>
+              {purchasesPageCount > 1 && (
+                <nav className="tablePagination" aria-label="Pagination des achats">
+                  <button
+                    type="button"
+                    disabled={currentPurchasesPage === 1}
+                    onClick={() => setPurchasesPage(currentPurchasesPage - 1)}
+                  >
+                    Précédent
+                  </button>
+                  <span>
+                    Page {currentPurchasesPage} sur {purchasesPageCount}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={currentPurchasesPage === purchasesPageCount}
+                    onClick={() => setPurchasesPage(currentPurchasesPage + 1)}
+                  >
+                    Suivant
+                  </button>
+                </nav>
+              )}
+            </>
+          )}
+        </details>
+      </div>
+      {modal && (
+        <div
+          className={`modalBackdrop${pending ? " interactionLocked" : ""}`}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !pending)
+              setModal(null);
+          }}
+        >
+          <section
+            className="modal batchModal resaleModal"
+            role="dialog"
+            aria-modal="true"
+          >
+            <header className="modalHeader">
+              <div>
+                <p className="eyebrow">Achat-revente Pokémon</p>
+                <h2>
+                  {modal === "purchase"
+                    ? purchases.length === 1
+                      ? "Ajouter un achat"
+                      : `Ajouter ${purchases.length} achats`
+                    : "Enregistrer une vente"}
+                </h2>
+              </div>
+              <button disabled={pending} onClick={() => setModal(null)}>
+                ×
+              </button>
+            </header>
+            {modal === "purchase" ? (
+              <form
+                action={purchaseAction}
+                className="transactionForm resaleForm"
+              >
+                <input
+                  type="hidden"
+                  name="purchases"
+                  value={JSON.stringify(
+                    purchases.map(
+                      ({
+                        purchasedOn,
+                        seriesName,
+                        productName,
+                        quantity,
+                        unitCost,
+                      }) => ({
+                        purchasedOn,
+                        seriesName,
+                        productName,
+                        quantity,
+                        unitCost,
+                      }),
+                    ),
+                  )}
+                />
+                <div className="operationTable purchaseOperationTable">
+                  <div className="operationTableHead">
+                    <span>Date d’achat</span>
+                    <span>Série</span>
+                    <span>Produit</span>
+                    <span>Quantité achetée</span>
+                    <span>Prix d’achat unitaire</span>
+                    <span />
+                  </div>
+                  <div className="operationList">
+                    {purchases.map((row) => (
+                      <article className="operationLine" key={row.id}>
+                        <label>
+                          <input
+                            type="date"
+                            required
+                            value={row.purchasedOn}
+                            onChange={(event) =>
+                              updatePurchase(
+                                row.id,
+                                "purchasedOn",
+                                event.target.value,
+                              )
+                            }
+                          />
+                        </label>
+                        <label>
+                          <ProductAutocomplete
+                            value={row.seriesName}
+                            products={knownSeries}
+                            onChange={(value) =>
+                              updatePurchase(row.id, "seriesName", value)
+                            }
+                            placeholder="Ex. ME6 - Règne Delta"
+                            suggestionsLabel="Séries déjà enregistrées"
+                            createLabel="Créer cette nouvelle série"
+                            maxLength={120}
+                          />
+                        </label>
+                        <label>
+                          <ProductAutocomplete
+                            value={row.productName}
+                            products={knownProductNames}
+                            onChange={(value) =>
+                              updatePurchase(row.id, "productName", value)
+                            }
+                            placeholder={
+                              knownProductNames.length
+                                ? "Rechercher ou saisir un produit"
+                                : "Ex. Pokébox 30 ans"
+                            }
+                          />
+                        </label>
+                        <label>
+                          <input
+                            required
+                            inputMode="decimal"
+                            value={row.quantity}
+                            onChange={(event) =>
+                              updatePurchase(
+                                row.id,
+                                "quantity",
+                                event.target.value,
+                              )
+                            }
+                          />
+                        </label>
+                        <label>
+                          <input
+                            required
+                            inputMode="decimal"
+                            value={row.unitCost}
+                            onChange={(event) =>
+                              updatePurchase(
+                                row.id,
+                                "unitCost",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="0,00"
+                          />
+                        </label>
+                        <span className="lineActions">
+                          <button
+                            type="button"
+                            className="duplicateOperation"
+                            onClick={() => duplicatePurchase(row.id)}
+                            aria-label="Dupliquer cet achat"
+                            title="Dupliquer"
+                          >
+                            ⧉
+                          </button>
+                          <button
+                            type="button"
+                            className="removeOperation"
+                            disabled={purchases.length === 1}
+                            onClick={() =>
+                              setPurchases((rows) =>
+                                rows.filter((item) => item.id !== row.id),
+                              )
+                            }
+                          >
+                            ×
+                          </button>
+                        </span>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="addOperation"
+                  onClick={() =>
+                    setPurchases((rows) => [...rows, newPurchase()])
+                  }
+                >
+                  + Ajouter un produit
+                </button>
+                {purchaseState.message && (
+                  <p className="formError">{purchaseState.message}</p>
+                )}
+                <footer>
+                  <div />
+                  <span>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => setModal(null)}
+                    >
+                      Annuler
+                    </button>
+                    <button className="primaryButton" disabled={pending}>
+                      {pending
+                        ? "Enregistrement…"
+                        : purchases.length === 1
+                          ? "Enregistrer"
+                          : "Tout enregistrer"}
+                    </button>
+                  </span>
+                </footer>
+              </form>
+            ) : (
+              <form action={saleAction} className="transactionForm resaleForm">
+                <input
+                  type="hidden"
+                  name="items"
+                  value={JSON.stringify(
+                    items.map(({ seriesName, productName, quantity }) => ({
+                      seriesName,
+                      productName,
+                      quantity,
+                    })),
+                  )}
+                />
+                <div className="saleMeta">
+                  <label>
+                    Date de vente
+                    <input
+                      type="date"
+                      name="soldOn"
+                      required
+                      defaultValue={today}
+                    />
+                  </label>
+                  <label>
+                    Description de la vente
+                    <input
+                      name="description"
+                      required
+                      maxLength={180}
+                      placeholder="Ex. Lot anniversaire Pokémon"
+                    />
+                  </label>
+                  <label>
+                    Canal de vente
+                    <select name="saleChannel" required defaultValue="VINTED">
+                      <option value="VINTED">Vinted</option>
+                      <option value="PHYSICAL">Physique</option>
+                    </select>
+                  </label>
+                  <label>
+                    Prix de vente total
+                    <input
+                      name="saleTotal"
+                      required
+                      inputMode="decimal"
+                      placeholder="0,00"
+                    />
+                  </label>
+                </div>
+                <div className="saleItemTable">
+                  <div className="saleItemHead">
+                    <span>Produit pris dans le stock</span>
+                    <span>Quantité vendue</span>
+                    <span />
+                  </div>
+                  {items.map((row) => (
+                    <article key={row.id}>
+                      <div
+                        className={`productPicker${openSelect === row.id ? " open" : ""}`}
+                      >
+                        <button
+                          type="button"
+                          className="productPickerTrigger"
+                          onClick={() =>
+                            setOpenSelect((current) =>
+                              current === row.id ? null : row.id,
+                            )
+                          }
+                        >
+                          <span>
+                            {row.productName
+                              ? `${row.productName} · ${row.seriesName}`
+                              : "Sélectionner"}
+                          </span>
+                          <i aria-hidden="true" />
+                        </button>
+                        {openSelect === row.id && (
+                          <div className="productPickerMenu">
+                            {data.products.map((product) => (
+                              <button
+                                type="button"
+                                key={`${product.seriesName}-${product.productName}`}
+                                onClick={() => {
+                                  updateItem(
+                                    row.id,
+                                    "seriesName",
+                                    product.seriesName,
+                                  );
+                                  updateItem(
+                                    row.id,
+                                    "productName",
+                                    product.productName,
+                                  );
+                                  setOpenSelect(null);
+                                }}
+                              >
+                                <b>{product.productName}</b>
+                                <em>{product.seriesName}</em>
+                                <small>
+                                  {num(product.remainingQuantity)} disponible
+                                  {Number(product.remainingQuantity) > 1
+                                    ? "s"
+                                    : ""}
+                                </small>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <input
+                        required
+                        inputMode="decimal"
+                        value={row.quantity}
+                        onChange={(event) =>
+                          updateItem(row.id, "quantity", event.target.value)
+                        }
+                      />
+                      <button
+                        type="button"
+                        className="removeOperation"
+                        disabled={items.length === 1}
+                        onClick={() =>
+                          setItems((rows) =>
+                            rows.filter((item) => item.id !== row.id),
+                          )
+                        }
+                      >
+                        ×
+                      </button>
+                    </article>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="addOperation"
+                  onClick={() => setItems((rows) => [...rows, newSaleItem()])}
+                >
+                  + Ajouter un produit au lot
+                </button>
+                {saleState.message && (
+                  <p className="formError">{saleState.message}</p>
+                )}
+                <footer>
+                  <div />
+                  <span>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => setModal(null)}
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      className="primaryButton"
+                      disabled={
+                        pending || items.some((item) => !item.productName)
+                      }
+                    >
+                      {pending ? "Enregistrement…" : "Enregistrer la vente"}
+                    </button>
+                  </span>
+                </footer>
+              </form>
+            )}
+          </section>
+        </div>
+      )}
+      {editing && (
+        <div
+          className={`modalBackdrop${pending ? " interactionLocked" : ""}`}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !pending)
+              setEditing(null);
+          }}
+        >
+          <section
+            className="modal resaleEditModal"
+            role="dialog"
+            aria-modal="true"
+          >
+            <header className="modalHeader">
+              <div>
+                <p className="eyebrow">Achat-revente Pokémon</p>
+                <h2>Modifier un achat</h2>
+              </div>
+              <button disabled={pending} onClick={() => setEditing(null)}>
+                ×
+              </button>
+            </header>
+            <form action={editAction} className="transactionForm resaleForm">
+              <input type="hidden" name="id" value={editing.id} />
+              <div className="resaleEditGrid">
+                <label>
+                  Date d’achat
+                  <input
+                    type="date"
+                    name="purchasedOn"
+                    required
+                    defaultValue={editing.purchasedOn}
+                  />
+                </label>
+                <label>
+                  Série
+                  <ProductAutocomplete
+                    name="seriesName"
+                    value={editing.seriesName}
+                    products={knownSeries}
+                    onChange={(value) =>
+                      setEditing((current) =>
+                        current ? { ...current, seriesName: value } : current,
+                      )
+                    }
+                    placeholder="Rechercher ou saisir une série"
+                    suggestionsLabel="Séries déjà enregistrées"
+                    createLabel="Créer cette nouvelle série"
+                    maxLength={120}
+                  />
+                </label>
+                <label>
+                  Produit
+                  <ProductAutocomplete
+                    name="productName"
+                    value={editing.productName}
+                    products={knownProductNames}
+                    onChange={(value) =>
+                      setEditing((current) =>
+                        current ? { ...current, productName: value } : current,
+                      )
+                    }
+                    placeholder="Rechercher ou saisir un produit"
+                    suggestionsLabel="Produits déjà enregistrés"
+                    createLabel="Créer ce nouveau produit"
+                  />
+                </label>
+                <label>
+                  Quantité achetée
+                  <input
+                    name="quantity"
+                    required
+                    inputMode="decimal"
+                    defaultValue={editing.quantity.replace(".", ",")}
+                  />
+                </label>
+                <label>
+                  Prix unitaire
+                  <input
+                    name="unitCost"
+                    required
+                    inputMode="decimal"
+                    defaultValue={editing.unitCostEur.replace(".", ",")}
+                  />
+                </label>
+              </div>
+              {Number(editing.soldQuantity) > 0 && (
+                <p className="editStockNotice">
+                  Déjà vendue : {num(editing.soldQuantity)}. La nouvelle
+                  quantité ne peut pas être inférieure.
+                </p>
+              )}
+              {editState.message && (
+                <p className="formError">{editState.message}</p>
+              )}
+              <footer>
+                <div />
+                <span>
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => setEditing(null)}
+                  >
+                    Annuler
+                  </button>
+                  <button className="primaryButton" disabled={pending}>
+                    {pending ? "Modification…" : "Enregistrer"}
+                  </button>
+                </span>
+              </footer>
+            </form>
+          </section>
+        </div>
+      )}
+      {editingSale && (
+        <div
+          className={`modalBackdrop${editSalePending ? " interactionLocked" : ""}`}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !editSalePending)
+              setEditingSale(null);
+          }}
+        >
+          <section
+            className="modal batchModal resaleModal"
+            role="dialog"
+            aria-modal="true"
+          >
+            <header className="modalHeader">
+              <div>
+                <p className="eyebrow">Achat-revente Pokémon</p>
+                <h2>Modifier la vente</h2>
+              </div>
+              <button
+                disabled={editSalePending}
+                onClick={() => setEditingSale(null)}
+              >
+                ×
+              </button>
+            </header>
+            <form
+              action={editSaleAction}
+              className="transactionForm resaleForm"
+            >
+              <input type="hidden" name="id" value={editingSale.id} />
+              <input
+                type="hidden"
+                name="items"
+                value={JSON.stringify(
+                  editingSale.editItems.map(
+                    ({ seriesName, productName, quantity }) => ({
+                      seriesName,
+                      productName,
+                      quantity,
+                    }),
+                  ),
+                )}
+              />
+              <div className="saleMeta">
+                <label>
+                  Date de vente
+                  <input
+                    type="date"
+                    name="soldOn"
+                    required
+                    defaultValue={editingSale.soldOn}
+                  />
+                </label>
+                <label>
+                  Description de la vente
+                  <input
+                    name="description"
+                    required
+                    maxLength={180}
+                    defaultValue={editingSale.description}
+                  />
+                </label>
+                <label>
+                  Canal de vente
+                  <select
+                    name="saleChannel"
+                    required
+                    defaultValue={editingSale.saleChannel}
+                  >
+                    <option value="VINTED">Vinted</option>
+                    <option value="PHYSICAL">Physique</option>
+                  </select>
+                </label>
+                <label>
+                  Prix de vente total
+                  <input
+                    name="saleTotal"
+                    required
+                    inputMode="decimal"
+                    defaultValue={editingSale.saleTotalEur.replace(".", ",")}
+                  />
+                </label>
+              </div>
+              <div className="saleItemTable">
+                <div className="saleItemHead">
+                  <span>Produit pris dans le stock</span>
+                  <span>Quantité vendue</span>
+                  <span />
+                </div>
+                {editingSale.editItems.map((row) => (
+                  <article key={row.id}>
+                    <div
+                      className={`productPicker${openSelect === row.id ? " open" : ""}`}
+                    >
+                      <button
+                        type="button"
+                        className="productPickerTrigger"
+                        onClick={() =>
+                          setOpenSelect((current) =>
+                            current === row.id ? null : row.id,
+                          )
+                        }
+                      >
+                        <span>
+                          {row.productName
+                            ? `${row.productName} · ${row.seriesName}`
+                            : "Sélectionner"}
+                        </span>
+                        <i aria-hidden="true" />
+                      </button>
+                      {openSelect === row.id && (
+                        <div className="productPickerMenu">
+                          {data.products.map((product) => (
+                            <button
+                              type="button"
+                              key={`${product.seriesName}-${product.productName}`}
+                              onClick={() => {
+                                setEditingSale((current) =>
+                                  current
+                                    ? {
+                                        ...current,
+                                        editItems: current.editItems.map(
+                                          (item) =>
+                                            item.id === row.id
+                                              ? {
+                                                  ...item,
+                                                  seriesName:
+                                                    product.seriesName,
+                                                  productName:
+                                                    product.productName,
+                                                }
+                                              : item,
+                                        ),
+                                      }
+                                    : current,
+                                );
+                                setOpenSelect(null);
+                              }}
+                            >
+                              <b>{product.productName}</b>
+                              <em>{product.seriesName}</em>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      required
+                      inputMode="decimal"
+                      value={row.quantity}
+                      onChange={(event) =>
+                        setEditingSale((current) =>
+                          current
+                            ? {
+                                ...current,
+                                editItems: current.editItems.map((item) =>
+                                  item.id === row.id
+                                    ? { ...item, quantity: event.target.value }
+                                    : item,
+                                ),
+                              }
+                            : current,
+                        )
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="removeOperation"
+                      disabled={editingSale.editItems.length === 1}
+                      onClick={() =>
+                        setEditingSale((current) =>
+                          current
+                            ? {
+                                ...current,
+                                editItems: current.editItems.filter(
+                                  (item) => item.id !== row.id,
+                                ),
+                              }
+                            : current,
+                        )
+                      }
+                    >
+                      ×
+                    </button>
+                  </article>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="addOperation"
+                onClick={() =>
+                  setEditingSale((current) =>
+                    current
+                      ? {
+                          ...current,
+                          editItems: [...current.editItems, newSaleItem()],
+                        }
+                      : current,
+                  )
+                }
+              >
+                + Ajouter un produit au lot
+              </button>
+              {editSaleState.message && (
+                <p className="formError">{editSaleState.message}</p>
+              )}
+              <footer>
+                <div />
+                <span>
+                  <button
+                    type="button"
+                    disabled={editSalePending}
+                    onClick={() => setEditingSale(null)}
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    className="primaryButton"
+                    disabled={
+                      editSalePending ||
+                      editingSale.editItems.some((item) => !item.productName)
+                    }
+                  >
+                    {editSalePending ? "Modification…" : "Enregistrer"}
+                  </button>
+                </span>
+              </footer>
+            </form>
+          </section>
+        </div>
+      )}
+      {purchaseToDelete && (
+        <div
+          className={`modalBackdrop${deletingPurchase ? " interactionLocked" : ""}`}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !deletingPurchase)
+              setPurchaseToDelete(null);
+          }}
+        >
+          <section
+            className="modal deletePurchaseModal"
+            role="alertdialog"
+            aria-modal="true"
+          >
+            <header className="modalHeader">
+              <div>
+                <p className="eyebrow">Confirmation</p>
+                <h2>Supprimer cet achat ?</h2>
+              </div>
+              <button
+                disabled={deletingPurchase}
+                onClick={() => setPurchaseToDelete(null)}
+              >
+                ×
+              </button>
+            </header>
+            <p>
+              L’achat de <strong>{purchaseToDelete.name}</strong> sera
+              définitivement supprimé du stock.
+            </p>
+            {deleteError && <p className="formError">{deleteError}</p>}
+            <footer>
+              <button
+                type="button"
+                disabled={deletingPurchase}
+                onClick={() => setPurchaseToDelete(null)}
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                className="dangerButton"
+                disabled={deletingPurchase}
+                onClick={confirmPurchaseDeletion}
+              >
+                {deletingPurchase ? "Suppression…" : "Supprimer"}
+              </button>
+            </footer>
+          </section>
+        </div>
+      )}
+    </>
+  );
 }
