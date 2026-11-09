@@ -82,7 +82,7 @@ h1 { margin:0; font:650 32px/1.1 "Segoe UI",Arial,sans-serif; } h2 { margin:0; f
 .modalBackdrop{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:10000!important;overflow:auto!important;padding:24px!important;display:flex!important;align-items:center!important;justify-content:center!important}.editOperationsModal{position:relative;flex:0 0 auto;max-height:calc(100dvh - 48px);overflow:auto}
 .modalBackdrop.interactionLocked{cursor:wait}.modalBackdrop.interactionLocked .modal{user-select:none}.modalBackdrop.interactionLocked .modalHeader button{opacity:.45}
 .portfolioAssetTable .performanceCell b,.portfolioAssetTable .performanceCell small{display:inline;white-space:nowrap}.portfolioAssetTable .performanceCell small{margin:0 0 0 7px;color:inherit;font-style:italic!important}
-.portfolioAssetTable th:first-child,.portfolioAssetTable td:first-child{width:330px;min-width:330px;max-width:330px}.portfolioAssetTable td:first-child b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.portfolioAssetTable th:first-child,.portfolioAssetTable td:first-child{width:240px;min-width:240px;max-width:240px}.portfolioAssetTable td:first-child b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .portfolioAssetTable .assetNameTooltip{position:relative;overflow:visible;cursor:help}.assetNameTooltip::before{content:"";position:absolute;left:18px;top:calc(100% + 3px);border:6px solid transparent;border-bottom-color:#252720;opacity:0;visibility:hidden;transform:translateY(-3px);transition:.15s;z-index:30}.assetNameTooltip::after{content:attr(data-full-name);position:absolute;left:0;top:calc(100% + 15px);width:max-content;max-width:360px;padding:9px 11px;border-radius:8px;background:#252720;color:#fff;font-size:12px;font-weight:600;line-height:1.35;white-space:normal;box-shadow:0 8px 24px #0003;opacity:0;visibility:hidden;transform:translateY(-3px);transition:.15s;pointer-events:none;z-index:30}.assetNameTooltip:hover::before,.assetNameTooltip:hover::after{opacity:1;visibility:visible;transform:translateY(0)}
 .portfolioAssetTable td:first-child .assetNameTooltip{position:relative;display:block;min-width:0;max-width:100%;overflow:visible;cursor:help}.portfolioAssetTable td:first-child .assetNameTooltip>b{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .portfolioAssetTable td:first-child .assetLogo{grid-row:1}
@@ -138,14 +138,130 @@ h1 { margin:0; font:650 32px/1.1 "Segoe UI",Arial,sans-serif; } h2 { margin:0; f
 .chartEventTooltip>div{width:230px;height:auto;min-height:76px}.chartEventMarker.is-pinned .chartEventTooltip>div{width:290px}.chartEventMarker.is-pinned .chartEventTooltip p{display:block;overflow:visible;-webkit-line-clamp:unset}
 .chartEventTooltip ul{grid-column:1;overflow:hidden;margin:2px 0 0;padding-left:13px;color:#e4e5e1;font-size:8px;line-height:1.35}.chartEventTooltip li{padding-left:1px}.chartEventMarker:not(.is-pinned) .chartEventTooltip ul{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3}.chartEventMarker.is-pinned .chartEventTooltip ul{overflow:visible}
 .performanceCard:hover{z-index:50}.comparisonMetrics{overflow:visible}
-.purchaseOperationTable .operationTableHead,.purchaseOperationTable .operationLine{grid-template-columns:170px minmax(320px,1fr) 170px 190px 68px}
+.purchaseOperationTable .operationTableHead,.purchaseOperationTable .operationLine{grid-template-columns:145px 190px minmax(250px,1fr) 135px 170px 68px}
 .productPicker{position:relative;min-width:0}.productPickerTrigger{width:100%;height:38px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 11px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font-size:11px;text-align:left}.productPickerTrigger span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.productPickerTrigger i{width:7px;height:7px;flex:0 0 auto;border-right:1.5px solid #555;border-bottom:1.5px solid #555;transform:rotate(45deg) translateY(-2px);transition:transform .16s}.productPicker.open .productPickerTrigger{border-color:#aaa59b;box-shadow:0 0 0 3px #2224200d}.productPicker.open .productPickerTrigger i{transform:rotate(225deg) translate(-2px,-1px)}.productPickerMenu{position:absolute;z-index:30;top:calc(100% + 5px);left:0;right:0;max-height:220px;overflow:auto;padding:5px;border:1px solid #d6d2ca;border-radius:10px;background:#fff;box-shadow:0 12px 30px #1d1e1a24}.productPickerMenu button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 10px;border:0;border-radius:7px;background:transparent;color:var(--ink);text-align:left}.productPickerMenu button:hover{background:#f1efea}.productPickerMenu b{font-size:11px}.productPickerMenu small{flex:0 0 auto;color:var(--muted);font-size:10px}
 .stockAccordionTrigger{width:100%;display:flex;align-items:center;gap:10px;padding:0;border:0;background:transparent;color:var(--ink);text-align:left}.stockAccordionTrigger>i{width:7px;height:7px;flex:0 0 auto;border-right:1.5px solid #6d6f69;border-bottom:1.5px solid #6d6f69;transform:rotate(-45deg);transition:transform .2s}.stockAccordionTrigger.open>i{transform:rotate(45deg) translate(-2px,-2px)}.stockAccordionTrigger>span{display:grid;gap:2px}.stockAccordionTrigger small{color:var(--muted);font-size:10px;font-weight:400}.stockLotsRow>td{padding:0!important;background:#f7f5f1}.stockLots{padding:8px 18px 12px 152px}.stockLots header,.stockLots article{display:grid;grid-template-columns:repeat(6,minmax(90px,1fr));gap:12px;align-items:center}.stockLots header{padding:6px 10px;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.45px}.stockLots article{padding:8px 10px;border-top:1px solid #e5e1da;font-size:11px}.stockLots article span:nth-child(n+2){font-style:italic}@media(max-width:900px){.stockLots{padding-left:18px;overflow:auto}.stockLots header,.stockLots article{min-width:650px}}
-.stockLots header,.stockLots article{grid-template-columns:repeat(6,minmax(80px,1fr)) 150px}.stockLotActions{display:flex;gap:5px;font-style:normal!important}.stockLotActions button{border:1px solid var(--line);border-radius:7px;background:#fff;padding:6px 8px;font-size:10px;font-weight:700}.stockLotActions .danger{border-color:#f2c4bd;color:#d94a3a;background:#fff7f5}.resaleEditModal{width:min(900px,calc(100vw - 32px))}.resaleEditGrid{display:grid;grid-template-columns:170px minmax(260px,1fr) 170px 180px;gap:9px}.resaleEditGrid label{display:grid;gap:6px;color:var(--muted);font-size:11px;font-weight:700}.resaleEditGrid input{height:42px;border:1px solid var(--line);border-radius:8px;padding:0 11px;background:#fff;color:var(--ink)}.editStockNotice{margin:0;color:var(--muted);font-size:11px}@media(max-width:850px){.resaleEditGrid{grid-template-columns:1fr 1fr}.stockLots header,.stockLots article{min-width:800px}}
+.stockLots header,.stockLots article{grid-template-columns:repeat(6,minmax(80px,1fr)) 150px}.stockLotActions{display:flex;gap:5px;font-style:normal!important}.stockLotActions button{border:1px solid var(--line);border-radius:7px;background:#fff;padding:6px 8px;font-size:10px;font-weight:700}.stockLotActions .danger{border-color:#f2c4bd;color:#d94a3a;background:#fff7f5}.resaleEditModal{width:min(1040px,calc(100vw - 32px))}.resaleEditGrid{display:grid;grid-template-columns:145px 180px minmax(240px,1fr) 145px 170px;gap:9px}.resaleEditGrid label{display:grid;gap:6px;color:var(--muted);font-size:11px;font-weight:700}.resaleEditGrid input{height:42px;border:1px solid var(--line);border-radius:8px;padding:0 11px;background:#fff;color:var(--ink)}.editStockNotice{margin:0;color:var(--muted);font-size:11px}@media(max-width:850px){.resaleEditGrid{grid-template-columns:1fr 1fr}.stockLots header,.stockLots article{min-width:800px}}
 .stockLots header,.stockLots article{grid-template-columns:repeat(6,minmax(80px,1fr)) 76px}.stockLotActions{justify-content:flex-end}.stockLotActions button{width:30px;height:30px;padding:0;font-size:0;display:grid;place-items:center}.stockLotActions button:before{content:"";width:14px;height:14px;background:center/contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c615c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z'/%3E%3C/svg%3E")}.stockLotActions .danger:before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d94a3a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='M19 6l-1 14H6L5 6'/%3E%3Cpath d='M10 11v5M14 11v5'/%3E%3C/svg%3E")}.stockLotActions button:hover{background:#f3f1ec}.stockLotActions .danger:hover{background:#fde9e5}
 .stockLotActions{align-items:center;justify-content:center}.stockLotActions button,.chartEventTooltip button{box-sizing:border-box;width:30px;height:30px;border-radius:7px;display:grid;place-items:center;padding:0;line-height:0}.stockLotActions button:before{display:block;width:14px;height:14px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%235c615c' d='M4 20h4l11-11-4-4L4 16v4Zm12.2-16.2 4 4 1.1-1.1a1.4 1.4 0 0 0 0-2l-2-2a1.4 1.4 0 0 0-2 0l-1.1 1.1Z'/%3E%3C/svg%3E")}.stockLotActions .danger:before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23d94a3a' d='M7 21a2 2 0 0 1-2-2V6h14v13a2 2 0 0 1-2 2H7Zm2-3h2V9H9v9Zm4 0h2V9h-2v9Zm-9-14h5l1-1h4l1 1h5v2H4V4Z'/%3E%3C/svg%3E")}.chartEventTooltip button{border:1px solid #ffffff20;background:#ffffff1c}.historyChartCanvas .chartEventTooltip button svg{width:14px;height:14px}
 .stockLotActions button:first-child{border-color:#f1c58d;background:#fff7eb}.stockLotActions button:first-child:before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23df851c' d='M4 20h4l11-11-4-4L4 16v4Zm12.2-16.2 4 4 1.1-1.1a1.4 1.4 0 0 0 0-2l-2-2a1.4 1.4 0 0 0-2 0l-1.1 1.1Z'/%3E%3C/svg%3E")}.stockLotActions button:first-child:hover{background:#ffefd8}.stockLotActions .danger{border-color:#f1b7b0;background:#fff1ef}.stockLotActions .danger:hover{background:#ffe3df}.duplicateOperation{border:1px solid #b9ccef!important;background:#eef4ff!important;color:#3972c3!important}.duplicateOperation:hover{background:#dfeaff!important}.chartEventTooltip button{border-color:#df851c66;background:#df851c!important;color:#fff}.chartEventTooltip button:hover{background:#c97110!important}
 .stockLotActions .danger:before{width:12px;height:12px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d94a3a' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E")}
+
+/* Autocomplétion des achats Pokémon */
+.purchaseOperationTable{overflow:visible}
+.purchaseOperationTable .operationList,.purchaseOperationTable .operationLine{overflow:visible}
+.purchaseOperationTable .operationLine:focus-within{position:relative;z-index:20}
+.purchaseProductAutocomplete{position:relative;width:100%}
+.purchaseProductInput{position:relative}
+.purchaseProductInput>input{width:100%;padding-right:38px!important}
+.purchaseProductInput>button{position:absolute;top:1px;right:1px;width:36px;height:36px;display:grid;place-items:center;border:0;border-left:1px solid #e7e3dc;border-radius:0 7px 7px 0;background:#fff;color:var(--muted);cursor:pointer}
+.purchaseProductInput>button:hover{background:#f5f3ef}
+.purchaseProductInput>button i{width:7px;height:7px;border-right:1.5px solid #5f615d;border-bottom:1.5px solid #5f615d;transform:rotate(45deg) translate(-1px,-1px);transition:transform .18s ease}
+.purchaseProductAutocomplete.open .purchaseProductInput>input{border-color:#ef5350;box-shadow:0 0 0 3px #ef535014;outline:0}
+.purchaseProductAutocomplete.open .purchaseProductInput>button i{transform:rotate(225deg) translate(-1px,-1px)}
+.purchaseProductSuggestions{position:absolute;z-index:100;top:calc(100% - 1px);left:0;right:0;overflow:visible;padding:6px;border:1px solid #d9d5ce;border-radius:0 0 10px 10px;background:#fff;box-shadow:0 14px 34px #24251f24}
+.purchaseProductSuggestionsTitle{padding:6px 9px 7px;color:#898b84;font-size:9px;font-weight:750;letter-spacing:.65px;text-transform:uppercase}
+.purchaseProductSuggestions>button{width:100%;height:38px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 10px;border:0;border-radius:7px;background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.purchaseProductSuggestions>button:hover,.purchaseProductSuggestions>button.active{background:#f3f1ed}
+.purchaseProductSuggestions>button span{overflow:hidden;font-size:12px;font-weight:700;white-space:nowrap;text-overflow:ellipsis}
+.purchaseProductSuggestions>button small{color:#999b95;font-size:9px;font-weight:600;text-transform:uppercase}
+.purchaseProductSuggestions>p{margin:4px 9px 8px;color:var(--muted);font-size:11px}
+.purchaseProductSuggestionsPortal{position:fixed;z-index:11000;right:auto;bottom:auto;max-height:none;overflow:visible}
+.purchaseProductNew{display:flex;align-items:center;gap:9px;margin-top:5px;padding:8px 9px;border-top:1px solid #ebe8e2;color:var(--ink)}
+.purchaseProductNew>span{width:23px;height:23px;display:grid;place-items:center;flex:0 0 auto;border-radius:7px;background:#fff0ed;color:#e34e43;font-size:16px;font-weight:700}
+.purchaseProductNew p{min-width:0;margin:0;display:grid;gap:1px}
+.purchaseProductNew b{font-size:10px}
+.purchaseProductNew small{overflow:hidden;color:var(--muted);font-size:10px;white-space:nowrap;text-overflow:ellipsis}
+
+/* Tableau de gestion achat-revente Pokémon */
+.resaleFinancialMetrics{grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.resaleFinancialMetrics article{min-height:122px;padding:18px 19px;border-top:3px solid #ef5350}
+.resaleFinancialMetrics article>span{font-size:11px;font-weight:700;color:var(--ink)}
+.resaleFinancialMetrics article>strong{margin-top:13px;font-size:24px}
+.resaleFinancialMetrics article>small{display:block;margin-top:6px;color:var(--muted);font-size:10px;line-height:1.35}
+.resaleAnalytics{display:grid;gap:14px;margin-bottom:22px}
+.resaleOperationalMetrics{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));overflow:hidden;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.resaleOperationalMetrics article{min-width:0;padding:15px 16px;border-left:1px solid var(--line)}
+.resaleOperationalMetrics article:first-child{border-left:0}
+.resaleOperationalMetrics span{display:block;overflow:hidden;color:var(--muted);font-size:9px;font-weight:650;letter-spacing:.25px;white-space:nowrap;text-overflow:ellipsis}
+.resaleOperationalMetrics strong{display:block;margin-top:7px;font-size:17px;white-space:nowrap}
+.resaleInsightsGrid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(330px,.8fr);gap:14px}
+.resaleChartCard,.resaleStockCard{min-width:0;padding:19px 21px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.resaleChartCard>header,.resaleStockCard>header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.resaleChartCard h2,.resaleStockCard h2{margin:3px 0 0;font-size:18px}
+.resaleChartLegend{display:flex;align-items:center;gap:14px;color:var(--muted);font-size:10px;white-space:nowrap}
+.resaleChartLegend span:before{content:"";display:inline-block;width:8px;height:8px;margin-right:5px;border-radius:2px;background:#e5a342}
+.resaleChartLegend .sales:before{background:#ef5350}.resaleChartLegend .profits:before{background:#398b68}
+.resaleMonthlyChart{height:210px;display:grid;grid-template-columns:repeat(12,minmax(24px,1fr));align-items:end;gap:7px;margin-top:18px;padding-top:14px;background:repeating-linear-gradient(to bottom,#0000 0,#0000 48px,#ebe8e2 49px,#0000 50px)}
+.resaleMonth{height:100%;display:grid;grid-template-rows:1fr 24px;align-items:end;min-width:0}
+.resaleMonth>b{align-self:end;color:var(--muted);font-size:9px;text-align:center;text-transform:capitalize}
+.resaleBars{height:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px;border-bottom:1px solid #d9d5ce}
+.resaleBars i{display:block;width:min(8px,28%);min-height:2px;border-radius:3px 3px 0 0;background:#e5a342;transition:filter .18s,transform .18s}
+.resaleBars .sales{background:#ef5350}.resaleBars .profits{background:#398b68}.resaleBars .profits.negative{background:#cf3e36}
+.resaleMonth:hover .resaleBars i{filter:saturate(1.15);transform:scaleX(1.12)}
+.resaleStockCard>header>strong{font-size:19px;white-space:nowrap}
+.resaleStockList{display:grid;gap:13px;margin-top:18px}
+.resaleStockList>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px}
+.resaleStockList span{min-width:0;display:grid;gap:2px}
+.resaleStockList span:nth-child(2){text-align:right}
+.resaleStockList b{overflow:hidden;font-size:11px;white-space:nowrap;text-overflow:ellipsis}
+.resaleStockList small{color:var(--muted);font-size:9px}
+.resaleStockList>div>i{grid-column:1/-1;height:5px;overflow:hidden;border-radius:10px;background:#efede8}
+.resaleStockList em{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ef5350,#ff8a78)}
+.resaleStockList>p{color:var(--muted);font-size:11px}
+.resaleDataAccordion{min-width:0}
+.resaleTablesGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.resaleTablesGrid,.resaleWideSection{width:calc(100vw - 336px);margin-left:calc(50% - (100vw - 336px)/2)}
+.resaleTablesGrid .tradingSection{margin-top:0}
+.resaleTablesGrid .resaleTable table{font-size:12px}
+.resaleTablesGrid .resaleTable th{padding:10px 9px;font-size:9px}
+.resaleTablesGrid .resaleTable td{padding:10px 9px}
+.resaleTablesGrid .stockTable table{width:100%;table-layout:fixed}
+.resaleTablesGrid .stockTable th:nth-child(1),.resaleTablesGrid .stockTable td:nth-child(1){width:88px}
+.resaleTablesGrid .stockTable td:first-child{display:table-cell;grid-template-columns:none}
+.resaleTablesGrid .stockTable th:nth-child(2),.resaleTablesGrid .stockTable td:nth-child(2){width:88px;white-space:normal}
+.resaleTablesGrid .stockTable th:nth-child(3),.resaleTablesGrid .stockTable td:nth-child(3){width:30%;white-space:normal}
+.resaleTablesGrid .stockTable th:nth-child(4),.resaleTablesGrid .stockTable td:nth-child(4){width:100px}
+.resaleTablesGrid .stockTable th:nth-child(5),.resaleTablesGrid .stockTable td:nth-child(5){width:130px}
+.resaleTablesGrid .stockTable th:nth-child(6),.resaleTablesGrid .stockTable td:nth-child(6){width:105px}
+.resaleTablesGrid .stockTable th:nth-child(7),.resaleTablesGrid .stockTable td:nth-child(7){width:68px}
+.resaleTablesGrid .stockTable .stockLotsRow>td{width:auto;white-space:normal}
+.resaleTablesGrid .stockTable tbody td{border-top:0}
+.resaleTablesGrid .stockTable .stockSummaryRow{border-top:1px solid #ebe7e1}
+.resaleTablesGrid .stockTable .stockSummaryRow:first-child{border-top:0}
+.resaleTablesGrid .salesHistoryTable td:nth-child(2){width:23%}
+.resaleTablesGrid .salesHistoryTable td:nth-child(3){width:30%}
+.resaleTablesGrid .saleComposition{min-width:110px;padding-left:12px;font-size:10px}
+.resaleTablesGrid .saleRowActions{gap:4px}
+.resaleTablesGrid .stockLots{box-sizing:border-box;width:100%;padding-left:12px;padding-right:12px;overflow:visible}
+.resaleTablesGrid .stockLots header,.resaleTablesGrid .stockLots article{width:100%;min-width:0}
+.resaleDataAccordion>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 10px;padding:9px 11px;border-radius:10px;list-style:none;cursor:pointer;transition:background .18s ease}
+.resaleDataAccordion>summary::-webkit-details-marker{display:none}
+.resaleDataAccordion>summary:hover{background:#eeece7}
+.resaleDataAccordion>summary h2{margin:3px 0 0;font-size:22px}
+.resaleDataAccordion>summary>i{width:32px;height:32px;display:grid;place-items:center;flex:0 0 auto;border:1px solid var(--line);border-radius:9px;background:#fff;box-shadow:0 3px 10px #25261f0b}
+.resaleDataAccordion>summary>i:after{content:"";width:7px;height:7px;border-right:1.7px solid #62645f;border-bottom:1.7px solid #62645f;transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s ease}
+.resaleDataAccordion[open]>summary>i:after{transform:rotate(225deg) translate(-1px,-1px)}
+.resaleDataAccordion:not([open])>summary{margin-bottom:0}
+.resaleDataAccordion{interpolate-size:allow-keywords}
+.resaleDataAccordion::details-content{display:block;block-size:0;overflow:hidden;opacity:0;transform:translateY(-4px);transition:block-size .25s ease,opacity .18s ease,transform .25s ease,content-visibility .25s allow-discrete}
+.resaleDataAccordion[open]::details-content{block-size:auto;opacity:1;transform:translateY(0)}
+.resaleStockOverview{margin-bottom:24px}
+.simpleStockTable table{table-layout:fixed}
+.simpleStockTable th:first-child,.simpleStockTable td:first-child{width:auto}
+.simpleStockTable th:last-child,.simpleStockTable td:last-child{width:180px;text-align:right}
+.simpleStockTable td{padding-top:11px;padding-bottom:11px}
+.performanceAmountCell{white-space:nowrap}
+.performanceAmountCell i{font:inherit;font-style:normal;font-weight:700}
+.portfolioTotalRow .performanceAmountCell i{font-weight:700}
+.portfolioAssetTable th:nth-child(n+9),.portfolioAssetTable td:nth-child(n+9){padding-left:7px;padding-right:7px}
+.portfolioAssetTable .performanceCell,.portfolioAssetTable .performanceAmountCell{width:1%;min-width:82px}
+@media(max-width:1300px){.resaleFinancialMetrics{grid-template-columns:repeat(3,1fr)}.resaleOperationalMetrics{grid-template-columns:repeat(4,1fr)}.resaleOperationalMetrics article:nth-child(5){border-left:0;border-top:1px solid var(--line)}.resaleOperationalMetrics article:nth-child(n+6){border-top:1px solid var(--line)}}
+@media(max-width:950px){.resaleInsightsGrid{grid-template-columns:1fr}.resaleOperationalMetrics{grid-template-columns:repeat(2,1fr)}.resaleOperationalMetrics article:nth-child(odd){border-left:0}.resaleOperationalMetrics article:nth-child(n+3){border-top:1px solid var(--line)}}
+@media(max-width:1100px){.resaleTablesGrid{grid-template-columns:1fr}.resaleTablesGrid .resaleTable table{font-size:12px}.resaleTablesGrid .resaleTable th{font-size:9px}}
+@media(max-width:1050px){.resaleTablesGrid,.resaleWideSection{width:calc(100vw - 256px);margin-left:calc(50% - (100vw - 256px)/2)}}
+@media(max-width:760px){.resaleTablesGrid,.resaleWideSection{width:calc(100vw - 32px);margin-left:calc(50% - (100vw - 32px)/2)}}
+@media(max-width:650px){.resaleFinancialMetrics{grid-template-columns:1fr 1fr}.resaleFinancialMetrics article{min-height:108px}.resaleMonthlyChart{gap:3px}.resaleChartLegend{display:none}}
 .stockLotActions button{position:relative;display:block!important;padding:0!important;line-height:30px!important;text-align:center!important}.stockLotActions button:before{position:absolute!important;top:50%!important;left:50%!important;display:block!important;margin:0!important;transform:translate(-50%,-50%)!important;transform-origin:center!important}.stockLotActions .danger:before{top:50%!important;left:50%!important}
 .deletePurchaseModal{width:min(480px,calc(100vw - 32px));display:grid;gap:18px}.deletePurchaseModal>p{margin:0;color:var(--muted);font-size:13px}.deletePurchaseModal footer{display:flex;justify-content:flex-end;gap:9px}.deletePurchaseModal footer button{border:1px solid var(--line);border-radius:9px;background:#fff;padding:10px 15px;font-weight:700}.deletePurchaseModal footer .dangerButton{border-color:#e15a4d;background:#e15a4d;color:#fff}.deletePurchaseModal footer .dangerButton:hover{background:#c9473b}
 .stockLots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px 18px 16px 42px}.stockLots>header{display:none}.stockLots>article{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 18px;min-width:0;padding:14px 58px 14px 16px;border:1px solid #e1ddd5;border-radius:11px;background:#fff;box-shadow:0 2px 7px #302c2410}.stockLots>article:before{position:absolute;inset:0 auto 0 0;width:3px;border-radius:11px 0 0 11px;background:#ef5350;content:""}.stockLots>article>span{display:grid;gap:3px;min-width:0;font-size:12px;font-style:normal!important}.stockLots>article>span:before{color:var(--muted);font-size:8px;font-style:normal;font-weight:650;letter-spacing:.45px;text-transform:uppercase}.stockLots>article>span:nth-child(1):before{content:"Date d’achat"}.stockLots>article>span:nth-child(2):before{content:"Quantité"}.stockLots>article>span:nth-child(3):before{content:"Prix unitaire"}.stockLots>article>span:nth-child(4):before{content:"Vendue"}.stockLots>article>span:nth-child(5):before{content:"Restante"}.stockLots>article>span:nth-child(6):before{content:"Valeur restante"}.stockLots>article>span:nth-child(3),.stockLots>article>span:nth-child(6){font-style:italic!important}.stockLots>article>span:nth-child(5){font-weight:750}.stockLots>article>.stockLotActions{position:absolute;top:50%;right:12px;display:grid;gap:7px;transform:translateY(-50%)}.stockLots>article>.stockLotActions:before{display:none!important}@media(max-width:1050px){.stockLots{grid-template-columns:1fr;padding-left:18px}}@media(max-width:620px){.stockLots>article{grid-template-columns:1fr 1fr;padding-right:52px}}
@@ -154,8 +270,10 @@ h1 { margin:0; font:650 32px/1.1 "Segoe UI",Arial,sans-serif; } h2 { margin:0; f
 .stockLots{padding-top:3px!important;padding-bottom:5px!important}.stockLots>header{padding-top:2px!important;padding-bottom:3px!important}.stockLots>article{min-height:31px!important;padding-top:3px!important;padding-bottom:3px!important}.stockLotActions button{width:24px!important;height:24px!important;line-height:24px!important}.stockLotActions button:before{width:11px!important;height:11px!important}
 .stockAccordionTrigger>span{display:flex!important;align-items:baseline!important;gap:4px!important;min-width:0}.stockAccordionTrigger>span b{min-width:0}.stockAccordionTrigger>span small{flex:0 0 auto;line-height:1!important}
 .stockAccordionTrigger>span small{font-style:italic!important}
+.singlePurchaseProduct{display:flex;align-items:baseline;gap:4px;min-width:0}.singlePurchaseProduct small{color:var(--muted);font-size:10px;font-style:italic;font-weight:400}.singlePurchaseActions{justify-content:flex-end}
 .stockLots>article>span:not(.stockLotActions){font-style:normal!important}
 .stockSummaryRow>td{font-style:normal!important}.stockSummaryRow>td b{font-style:normal!important}
+.resaleTablesGrid .stockLots>header,.resaleTablesGrid .stockLots>article{grid-template-columns:105px 90px minmax(100px,1fr) minmax(110px,1fr) 76px!important}
 .sortableStockTable thead th[role="button"]{cursor:pointer;user-select:none}.sortableStockTable thead th[role="button"]:after{content:"↕";display:inline-block;margin-left:6px;color:#777;font-size:12px;font-weight:800;opacity:.7}.sortableStockTable thead th[data-sort-direction="asc"]:after{content:"↑";color:#ef5350;opacity:1}.sortableStockTable thead th[data-sort-direction="desc"]:after{content:"↓";color:#ef5350;opacity:1}.sortableStockTable thead th[role="button"]:hover{color:var(--ink)}
 .saleItemTable{overflow:visible}.saleItemTable article{position:relative}.productPicker.open{z-index:50}.productPickerMenu{z-index:60}
 .productPicker.open .productPickerTrigger{border-radius:8px 8px 0 0}.productPickerMenu{top:100%;border-top:0;border-radius:0 0 10px 10px}
@@ -163,4 +281,7 @@ h1 { margin:0; font:650 32px/1.1 "Segoe UI",Arial,sans-serif; } h2 { margin:0; f
 .salesHistoryTable tbody td{vertical-align:middle;line-height:2}.salesHistoryTable tbody td:nth-child(1),.salesHistoryTable tbody td:nth-child(2){padding-top:10px;padding-bottom:10px}.salesHistoryTable tbody td:nth-child(2)>b{display:inline-flex;align-items:center;min-height:20px}
 .saleRowActions{display:flex;align-items:center;justify-content:flex-end;gap:6px}.editSaleButton{position:relative;width:34px;height:34px;padding:0;border:1px solid #f1c58d;border-radius:8px;background:#fff7eb;color:transparent;font-size:0}.editSaleButton:before{position:absolute;top:50%;left:50%;width:14px;height:14px;background:center/contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23df851c' d='M4 20h4l11-11-4-4L4 16v4Zm12.2-16.2 4 4 1.1-1.1a1.4 1.4 0 0 0 0-2l-2-2a1.4 1.4 0 0 0-2 0l-1.1 1.1Z'/%3E%3C/svg%3E");content:"";transform:translate(-50%,-50%)}.editSaleButton:hover{background:#ffefd8}.saleRowActions .deleteOperationButton{flex:0 0 auto}
 .salesHistoryTable tbody td:first-child{display:table-cell;grid-template-columns:none}
-.salesHistoryTable .editSaleButton,.salesHistoryTable .deleteOperationButton{width:29px;height:29px;border-radius:7px}.salesHistoryTable .editSaleButton:before{width:12px;height:12px}.salesHistoryTable .deleteOperationButton{font-size:17px}
+.resaleTablesGrid .salesHistoryTable tbody td{padding-top:7px;padding-bottom:7px;vertical-align:middle;line-height:1.35}
+.resaleTablesGrid .salesHistoryTable .saleComposition{line-height:1.3}
+.resaleTablesGrid .salesHistoryTable tbody td,.resaleTablesGrid .stockTable .stockSummaryRow>td{box-sizing:border-box;height:44px;vertical-align:middle}
+.salesHistoryTable .editSaleButton,.salesHistoryTable .deleteOperationButton{box-sizing:border-box;width:24px;height:24px;border-radius:6px;padding:0}.salesHistoryTable .editSaleButton:before{width:11px;height:11px}.salesHistoryTable .deleteOperationButton{font-size:15px;line-height:1}
