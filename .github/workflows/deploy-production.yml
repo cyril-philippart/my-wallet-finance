@@ -98,12 +98,18 @@ jobs:
           cd "$app_dir/deploy"
           test -f .env.production
           printf 'IMAGE_TAG=%s\n' "$IMAGE_TAG" > .env.release
-          compose="docker compose --env-file .env.production --env-file .env.release -f compose.production.yml"
-          $compose pull app scheduler db caddy
-          $compose up -d db
-          $compose run --rm migrate
-          $compose run --rm bootstrap
-          $compose up -d --force-recreate --remove-orphans db app scheduler caddy
-          $compose exec -T app node -e "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+          compose() {
+            docker compose --env-file .env.production --env-file .env.release -f compose.production.yml "$@"
+          }
+          compose pull app scheduler db caddy
+          compose up -d db
+          compose run --rm migrate
+          compose run --rm bootstrap
+          compose up -d --force-recreate --remove-orphans db app scheduler caddy
+          compose exec -T app node -e "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+          app_container="$(compose ps -q app)"
+          actual_image="$(docker inspect --format '{{.Config.Image}}' "$app_container")"
+          expected_image="$(compose config --images | grep '^ghcr.io/' | head -n 1)"
+          test "$actual_image" = "$expected_image"
           docker image prune -f
           REMOTE
