@@ -6,6 +6,7 @@ Toutes les évolutions notables de My Wallet Finance sont documentées ici.
 
 ### Ajouté
 
+- Affichage compact des liens Vinted dans les ventes Pokémon avec ouverture dans un nouvel onglet.
 - Choix du canal de vente Pokémon entre Vinted et vente physique, modifiable après enregistrement et visible dans l’historique.
 - Gestion des séries Pokémon séparément du nom des produits dans l’activité d’achat-revente.
 - Mémorisation et autocomplétion des séries et des produits lors de l’ajout ou de la modification d’un achat.
