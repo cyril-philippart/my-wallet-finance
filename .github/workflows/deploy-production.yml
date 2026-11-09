@@ -97,12 +97,13 @@ jobs:
           rm -f /tmp/my-wallet-deploy.tgz
           cd "$app_dir/deploy"
           test -f .env.production
-          export IMAGE_TAG
-          docker compose --env-file .env.production -f compose.production.yml pull app scheduler db caddy
-          docker compose --env-file .env.production -f compose.production.yml up -d db
-          docker compose --env-file .env.production -f compose.production.yml run --rm migrate
-          docker compose --env-file .env.production -f compose.production.yml run --rm bootstrap
-          docker compose --env-file .env.production -f compose.production.yml up -d --remove-orphans db app scheduler caddy
-          docker compose --env-file .env.production -f compose.production.yml exec -T app node -e "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+          printf 'IMAGE_TAG=%s\n' "$IMAGE_TAG" > .env.release
+          compose="docker compose --env-file .env.production --env-file .env.release -f compose.production.yml"
+          $compose pull app scheduler db caddy
+          $compose up -d db
+          $compose run --rm migrate
+          $compose run --rm bootstrap
+          $compose up -d --force-recreate --remove-orphans db app scheduler caddy
+          $compose exec -T app node -e "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
           docker image prune -f
           REMOTE
